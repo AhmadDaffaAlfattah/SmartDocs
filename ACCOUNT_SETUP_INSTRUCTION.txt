@@ -1,0 +1,100 @@
+==========================================
+INSTRUKSI SETUP HALAMAN ACCOUNT
+==========================================
+
+Saya sudah membuat semua file yang diperlukan untuk halaman Account Management.
+Silakan jalankan perintah-perintah berikut sesuai urutan:
+
+==========================================
+STEP 1: Jalankan Migration
+==========================================
+
+Jalankan command ini di terminal/command prompt di folder project:
+
+cd d:\laragon\www\dokumenintegrasi
+
+php artisan migrate
+
+(Ini akan membuat kolom 'bidang' dan 'role' di table users)
+
+==========================================
+STEP 2: Hash Password di Database (PENTING!)
+==========================================
+
+Setelah migration selesai, hash semua password yang ada di database:
+
+php artisan tinker
+
+Kemudian copy-paste code ini satu per satu:
+
+App\Models\User::all()->each(function($user) {
+    if (!str_starts_with($user->password, '$2y$')) {
+        $user->update(['password' => bcrypt($user->password)]);
+    }
+});
+
+Setelah selesai, ketik: exit
+
+==========================================
+STEP 3: Verifikasi
+==========================================
+
+Setelah semua selesai, buka browser dan akses:
+
+http://localhost/dokumenintegrasi/account
+
+==========================================
+FITUR YANG TERSEDIA
+==========================================
+
+✓ Lihat semua akun dengan tabel
+✓ Tambah akun baru (+ Tambah Account button)
+✓ Edit akun (klik icon edit)
+✓ Hapus akun (klik icon delete)
+✓ Ubah role: Super Admin, Administrator, user
+✓ Pilih bidang: Engineering, Business Support, Operasi, Pemeliharaan, Keamanan, Lingkungan
+✓ Search berdasarkan username, email, atau bidang
+✓ Pagination (10, 25, 50 entries)
+
+==========================================
+FILE YANG DIBUAT
+==========================================
+
+Controllers:
+- app/Http/Controllers/AccountController.php
+
+Models:
+- app/Models/User.php (Updated dengan bidang & role)
+
+Views:
+- resources/views/account/index.blade.php
+
+Routes:
+- routes/web.php (Updated dengan account routes)
+
+Migrations:
+- database/migrations/2025_01_26_000003_update_users_table.php
+
+Database:
+- Password di database akan ter-hash otomatis saat disimpan
+- Saat edit/tambah, password di form tampil plain text tapi di database ter-hash
+
+==========================================
+CATATAN PENTING
+==========================================
+
+1. Password di halaman form TIDAK di-hash (tampil plain text)
+   Tapi saat disimpan ke database, otomatis di-hash dengan bcrypt
+
+2. Jangan lupa jalankan php artisan tinker untuk hash password existing!
+
+3. Untuk login, gunakan password yang sudah di-hash di database
+
+4. Jika ada error, pastikan:
+   - Laravel sudah ter-install dengan benar
+   - Database sudah connected
+   - Migration sudah berjalan
+
+==========================================
+HUBUNGI DEVELOPER JIKA ADA ISSUE
+==========================================

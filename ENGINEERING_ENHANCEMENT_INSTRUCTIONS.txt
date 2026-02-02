@@ -1,0 +1,91 @@
+ENGINEERING PAGE ENHANCEMENT - IMPLEMENTATION INSTRUCTIONS
+
+PERUBAHAN YANG TELAH DILAKUKAN:
+================================
+
+1. DATABASE MIGRATION
+   - Migration baru: 2025_01_26_000004_add_link_to_engineering_documents.php
+   - Menambah kolom 'link' (longText, nullable)
+   - Mengubah file_path, file_name, file_type, file_size menjadi nullable
+
+   JALANKAN COMMAND:
+   php artisan migrate
+
+2. MODEL UPDATES
+   - File: app/Models/EngineeringDocument.php
+   - Tambah 'link' ke $fillable array
+
+3. CONTROLLER UPDATES
+   - File: app/Http/Controllers/EngineeringController.php
+   - Update store() method untuk handle link
+   - Update update() method untuk handle link
+   - Update getEditData() untuk return folderTree
+
+4. VIEW UPDATES
+   
+   a) CREATE PAGE (resources/views/engineering/create.blade.php)
+      - Tambah field untuk masukkan link
+      - Update folder selector untuk menggunakan folder_id
+      - Form sekarang support file ATAU link
+   
+   b) EDIT PAGE (resources/views/engineering/edit.blade.php)
+      - Tambah field untuk edit link
+      - Display link saat ini jika ada
+      - Support edit file atau link
+   
+   c) INDEX PAGE (resources/views/engineering/index.blade.php)
+      - Update table header: "File / Link"
+      - Display nama file jika ada file
+      - Display link jika ada link
+      - Icon untuk view file atau open link
+      - Update modal untuk edit folder (tree view) dan link
+      - Tambah CSS untuk folder-tree-item styling
+
+5. COMPONENT UPDATES
+   - File: resources/views/components/folder-tree-dropdown.blade.php
+   - Update untuk menggunakan folder_id sebagai ganti folder name
+   - JavaScript update untuk handle folder_id
+   
+   - File: resources/views/components/folder-tree-dropdown-items.blade.php
+   - Tambah data-folder-id attribute
+
+FITUR BARU:
+===========
+
+1. Upload File atau Masukkan Link
+   - User bisa upload file OR masukkan link
+   - Validasi: minimal salah satu harus ada
+   
+2. Display di Tabel
+   - Jika file: tampilkan nama file
+   - Jika link: tampilkan link dengan clickable (new tab)
+   - Icon untuk view/open
+
+3. Edit Page
+   - Edit folder dengan tree selector
+   - Edit/replace file
+   - Edit/replace link
+   - Display file/link saat ini
+
+TESTING CHECKLIST:
+==================
+
+[ ] Run migration: php artisan migrate
+[ ] Tambah dokumen baru dengan FILE
+[ ] Tambah dokumen baru dengan LINK
+[ ] Edit dokumen: change folder
+[ ] Edit dokumen: replace file
+[ ] Edit dokumen: add/replace link
+[ ] View tabel: file ditampilkan dengan benar
+[ ] View tabel: link clickable dan open di tab baru
+[ ] Edit modal: folder tree ditampilkan dengan benar
+[ ] Edit modal: link field ditampilkan
+
+CATATAN:
+========
+
+- Validasi form akan memastikan user upload file ATAU masukkan link
+- Folder selection menggunakan tree view yang searchable
+- Link akan open di new tab saat diklik dari tabel
+- File akan di-download/view sesuai file type
+

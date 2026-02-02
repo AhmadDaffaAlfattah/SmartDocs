@@ -1,0 +1,68 @@
+# PANDUAN CEPAT - PDF EXPORT LAPORAN ASSET WELLNESS
+
+## 📥 Cara Download PDF (3 Halaman)
+
+### Langkah-Langkah:
+1. **Buka** halaman "Kesehatan Mesin" (Asset Wellness)
+2. **Pilih filter** jika ingin spesifik:
+   - Tahun: 2025 (atau tahun lain)
+   - Bulan: Desember (atau bulan lain)
+   - Sentral: Opsional
+3. **Klik tombol** "📥 Download" di kanan atas
+4. **Pilih** "📋 Laporan PDF (3 Halaman)"
+5. **File otomatis** akan download ke komputer Anda
+
+---
+
+## 📄 Isi Laporan PDF (3 Halaman)
+
+### **Halaman 1: Form Penyampaian**
+- Data induk Asset Wellness
+- Tabel dengan kolom: Sentral, Kode Mesin, Unit, Total, Safe, Warning, Fault
+- Statistik ringkasan (total equipment, safe, warning, fault)
+- Warna status: Hijau (Safe), Kuning (Warning), Merah (Fault)
+
+### **Halaman 2: Detail Warning**
+- Semua asset dengan status WARNING
+- Detail: Unit, Tanggal, Status, Deskripsi, Kondisi, Action Plan
+- Highlight kuning untuk semua item warning
+- Total count warning
+
+### **Halaman 3: Detail Fault**
+- Semua asset dengan status FAULT
+- Detail: Unit, Tanggal, Status, Deskripsi, Kondisi, Action Plan
+- Highlight merah untuk semua item fault
+- Total count fault
+
+---
+
+## 🎨 Format & Tampilan
+
+✅ Header: Resmi dengan logo/judul perusahaan
+✅ Tanggal: Otomatis sesuai hari download
+✅ Nomor halaman: Otomatis di setiap halaman
+✅ Warna: Coding status untuk mudah dibaca
+✅ Print-friendly: Bisa langsung print dari PDF
+
+---
+
+## 💾 Nama File
+
+Format: `Laporan_Asset_Wellness_TAHUN_BULAN_TIMESTAMP.pdf`
+
+Contoh: `Laporan_Asset_Wellness_2025_12_20260130142530.pdf`
+
+---
+
+## 📌 Catatan
+
+- Tanggal pelaporan otomatis = hari saat download
+- Data di-filter sesuai tahun, bulan, sentral yang dipilih
+- Halaman otomatis terpisah untuk mudah dibaca
+- File siap print atau kirim email
+
+---
+
+**Dibuat**: 30 Januari 2026
+**Status**: Ready to Use ✅
+
