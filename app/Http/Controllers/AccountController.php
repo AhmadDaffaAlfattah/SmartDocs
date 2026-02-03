@@ -26,8 +26,8 @@ class AccountController extends Controller
 
         $accounts = $query->paginate($perPage);
 
-        $bidangs = ['Engineering', 'Business Support', 'Operasi', 'Pemeliharaan', 'Keamanan', 'Lingkungan'];
-        $roles = ['Administrator', 'user'];
+        $bidangs = ['Engineering', 'Business Support', 'Operasi', 'Pemeliharaan', 'Keamanan', 'Lingkungan', 'Mesin'];
+        $roles = ['super_admin', 'admin', 'user'];
 
         return view('account.index', [
             'accounts' => $accounts,
@@ -43,8 +43,8 @@ class AccountController extends Controller
      */
     public function create()
     {
-        $bidangs = ['Engineering', 'Business Support', 'Operasi', 'Pemeliharaan', 'Keamanan', 'Lingkungan'];
-        $roles = ['Administrator', 'user'];
+        $bidangs = ['Engineering', 'Business Support', 'Operasi', 'Pemeliharaan', 'Keamanan', 'Lingkungan', 'Mesin'];
+        $roles = ['super_admin', 'admin', 'user'];
 
         return view('account.create', [
             'bidangs' => $bidangs,
@@ -61,8 +61,8 @@ class AccountController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'bidang' => 'required|string',
-            'role' => 'required|in:Administrator,user',
+            'bidang' => 'nullable|string',
+            'role' => 'required|in:super_admin,admin,user',
         ]);
 
         User::create($validated);
@@ -83,8 +83,8 @@ class AccountController extends Controller
      */
     public function edit(User $account)
     {
-        $bidangs = ['Engineering', 'Business Support', 'Operasi', 'Pemeliharaan', 'Keamanan', 'Lingkungan'];
-        $roles = ['Administrator', 'user'];
+        $bidangs = ['Engineering', 'Business Support', 'Operasi', 'Pemeliharaan', 'Keamanan', 'Lingkungan', 'Mesin'];
+        $roles = ['super_admin', 'admin', 'user'];
 
         return view('account.edit', [
             'account' => $account,
@@ -102,8 +102,8 @@ class AccountController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $account->id,
             'password' => 'nullable|string|min:6',
-            'bidang' => 'required|string',
-            'role' => 'required|in:Administrator,user',
+            'bidang' => 'nullable|string',
+            'role' => 'required|in:super_admin,admin,user',
         ]);
 
         if (!$validated['password']) {
@@ -141,8 +141,8 @@ class AccountController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $account->id,
             'password' => 'nullable|string|min:6',
-            'bidang' => 'required|string',
-            'role' => 'required|in:Administrator,user',
+            'bidang' => 'nullable|string',
+            'role' => 'required|in:super_admin,admin,user',
         ]);
 
         if (!$validated['password']) {

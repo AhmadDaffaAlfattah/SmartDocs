@@ -1,0 +1,18 @@
+Verifikasi Excel Export Asset Wellness:
+
+1.  **Struktur Sheet (5 Sheet)**:
+    -   `Form Penyampaian`: Daftar data aset (Index). Judul sheet diperbaiki dari "Penyimpanan" menjadi "Penyampaian".
+    -   `Peta Kesehatan`: Representasi hirarki mesin (UP -> UL -> PLTD -> Mesin) dengan pewarnaan status (Safe/Warning/Fault). Diimplementasikan sebagai tabel hirarki di Excel.
+    -   `Detail Warning`: Sheet existing (sudah ada).
+    -   `Detail Fault`: Sheet existing (sudah ada).
+    -   `Visualisasi Data`: Sheet baru berisi:
+        -   Ringkasan Statistik (Tabel Safe/Warning/Fault).
+        -   Data Tren Issue Bulanan (Tabel untuk Bar Chart).
+
+2.  **Logic Changes**:
+    -   Modified `AssetWellnessExport.php` to include the 5 sheets.
+    -   Created `PetaKesehatanSheet.php` with map logic.
+    -   Created `VisualisasiDataSheet.php` with stats and monthly data.
+    -   Cleaned up `AssetWellnessSheet.php` to remove redundant stats at the bottom.
+
+The Excel export should now match the PDF structure in terms of content separation across sheets.

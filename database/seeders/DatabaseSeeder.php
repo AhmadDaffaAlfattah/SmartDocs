@@ -24,5 +24,6 @@ class DatabaseSeeder extends Seeder
 
         // Seed folders
         $this->call(FolderSeeder::class);
+        $this->call(SuperAdminSeeder::class);
     }
 }

@@ -160,6 +160,11 @@
                                 <input type="text" name="kode_mesin_silm" value="{{ old('kode_mesin_silm') }}">
                             </div>
                         </div>
+                        
+                        <div class="form-group">
+                            <label>Inisial Mesin (untuk Peta)</label>
+                            <input type="text" name="inisial_mesin" value="{{ old('inisial_mesin') }}">
+                        </div>
 
                         <div class="form-row">
                             <div class="form-group">

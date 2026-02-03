@@ -267,6 +267,12 @@
                         <div class="alert-success">✅ {{ $message }}</div>
                     @endif
 
+                    @if($message = session('error'))
+                        <div style="color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; padding: 12px 15px; border-radius: 4px; margin-bottom: 15px; border: 1px solid transparent;">
+                            ❌ {{ $message }}
+                        </div>
+                    @endif
+
                     <!-- TAB NAVIGATION -->
                     <div class="nav-tabs">
                         <button class="nav-tab active" onclick="showTab(event, 'tab-form')">Form Penyimpanan</button>
@@ -302,7 +308,24 @@
                                 </select>
                             </form>
 
-                            <div class="button-group" style="margin-left: auto;">
+                            <div class="button-group" style="margin-left: auto; align-items: center; display: flex;">
+                                <form action="{{ route('asset-wellness.destroyPeriod') }}" method="POST" onsubmit="return confirm('⚠️ PERINGATAN: Anda yakin ingin menghapus SEMUA DATA untuk Periode {{ $bulan }}-{{ $tahun }}? Data yang dihapus tidak dapat dikembalikan!');" style="margin-right: 10px;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <input type="hidden" name="tahun" value="{{ $tahun }}">
+                                    <input type="hidden" name="bulan" value="{{ $bulan }}">
+                                    <input type="hidden" name="sentral" value="{{ $sentral }}">
+                                    <button type="submit" style="background: #e74c3c; color: white; border: none; padding: 7px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Hapus Data</button>
+                                </form>
+                                <form action="{{ route('asset-wellness.import') }}" method="POST" enctype="multipart/form-data" style="margin-right: 10px; display: inline-flex; align-items: center; gap: 5px;">
+                                    @csrf
+                                    <input type="hidden" name="tahun" value="{{ $tahun }}">
+                                    <input type="hidden" name="bulan" value="{{ $bulan }}">
+                                    <input type="hidden" name="sentral" value="{{ $sentral }}">
+                                    <input type="file" name="file" accept=".xlsx, .xls, .csv" required style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; width: 200px;">
+                                    <button type="submit" style="background: #17a2b8; color: white; border: none; padding: 7px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">📤 Upload Excel</button>
+                                </form>
+
                                 <div class="btn-download" onclick="toggleDownloadMenu(event)" style="position: relative;">
                                     📥 Download
                                     <div id="downloadMenu" class="dropdown-menu">
@@ -321,6 +344,7 @@
                                         <th style="text-align: center; width: 50px;">NO</th>
                                         <th style="width: 150px;">SENTRAL</th>
                                         <th style="width: 100px;">TIPE ASET</th>
+                                        <th style="width: 100px;">INISIAL</th>
                                         <th style="width: 150px;">KODE MESIN UNIT PEMBANGKIT (SILM)</th>
                                         <th style="width: 180px;">UNIT PEMBANGKIT/COMMON</th>
                                         <th style="text-align: center; width: 100px;">Daya Terpasang (MW)</th>
@@ -343,6 +367,7 @@
                                             <td style="text-align: center;">{{ $key + 1 }}</td>
                                             <td><strong>{{ $asset->sentral ?? '-' }}</strong></td>
                                             <td>{{ $asset->tipe_aset ?? '-' }}</td>
+                                            <td>{{ $asset->inisial_mesin ?? '-' }}</td>
                                             <td>{{ $asset->kode_mesin_silm ?? '-' }}</td>
                                             <td>{{ $asset->unit_pembangkit_common }}</td>
                                             <td style="text-align: center;">{{ $asset->daya_terpasang ?? '-' }}</td>
@@ -404,7 +429,7 @@
                                             $total_persen_fault = $grand_total > 0 ? round(($total_fault / $grand_total) * 100, 2) : 0;
                                         @endphp
                                         <tr style="background-color: #E8F5E9; font-weight: bold; border-top: 3px solid #333;">
-                                            <td colspan="5" style="text-align: right; padding-right: 20px;">TOTAL</td>
+                                            <td colspan="6" style="text-align: right; padding-right: 20px;">TOTAL</td>
                                             <td style="text-align: center;">{{ $total_daya_terpasang }}</td>
                                             <td style="text-align: center;">{{ $total_daya_mampu_netto }}</td>
                                             <td style="text-align: center;">{{ $total_daya_mampu_pasok }}</td>
@@ -428,7 +453,7 @@
                         <style>
                             .org-chart-container {
                                 padding: 30px;
-                                background: linear-gradient(to bottom, #f0f0f0, #e8e8e8);
+                                background: white;
                                 min-height: 600px;
                                 overflow-x: auto;
                             }
@@ -439,21 +464,21 @@
 
                             /* UP KALTIMRA (Top Level) */
                             .up-box {
-                                margin: 0 auto 40px;
+                                margin: 0 auto 10px;
                                 display: inline-block;
                             }
 
                             .up-box img {
-                                width: 100px;
+                                width: 80px;
                                 height: auto;
                                 display: block;
-                                margin: 0 auto 10px;
+                                margin: 0 auto 5px;
                             }
 
                             .up-label {
                                 background: #FFB84D;
                                 color: white;
-                                padding: 10px 20px;
+                                padding: 8px 16px;
                                 border-radius: 4px;
                                 font-weight: bold;
                                 font-size: 14px;
@@ -462,7 +487,7 @@
                             /* Connector Line */
                             .connector-line {
                                 width: 2px;
-                                height: 30px;
+                                height: 20px;
                                 background: #999;
                                 margin: 0 auto;
                             }
@@ -470,7 +495,7 @@
                             .horizontal-line {
                                 height: 2px;
                                 background: #999;
-                                margin: 30px 0;
+                                margin: 10px 0;
                                 position: relative;
                             }
 
@@ -478,18 +503,18 @@
                             .ul-container {
                                 display: flex;
                                 gap: 20px;
-                                justify-content: center;
+                                justify-content: space-between;
                                 flex-wrap: wrap;
-                                margin-top: 30px;
+                                margin-top: 15px;
+                                width: 100%;
                             }
 
                             .ul-box {
                                 background: white;
-                                border: 2px solid #5dade2;
-                                border-radius: 4px;
-                                padding: 15px;
+                                border-radius: 4px; /* No border */
+                                padding: 10px;
                                 min-width: 200px;
-                                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                                flex: 1;
                             }
 
                             .ul-box img {
@@ -714,55 +739,66 @@
                             ];
 
                             // Create asset lookup with multiple matching strategies
-                            $assetLookup = [];
-                            $assetLookupBySilm = [];
+                            $assetLookup = []; 
+                            // Structure: code => [Asset1, Asset2]
                             
                             foreach($assets as $asset) {
                                 // Normalize: remove spaces and uppercase
                                 $kodemesinnorm = strtoupper(preg_replace('/\s+/', '', trim($asset->kode_mesin)));
                                 $silmnorm = strtoupper(preg_replace('/\s+/', '', trim($asset->kode_mesin_silm ?? '')));
                                 
-                                // Add to both lookups
+                                // Add to lookup (support multiple assets per code)
                                 if (!empty($kodemesinnorm)) {
-                                    $assetLookup[$kodemesinnorm] = $asset;
+                                    $assetLookup[$kodemesinnorm][] = $asset;
                                 }
                                 if (!empty($silmnorm)) {
-                                    $assetLookupBySilm[$silmnorm] = $asset;
+                                    $assetLookup[$silmnorm][] = $asset; // Merge SILM into same lookup for simplicity
                                 }
                             }
 
                             // Helper function to find machine
-                            function findMachine($machineName, $assetLookup, $assetLookupBySilm) {
+                            function findMachine($machineName, $assetLookup, $pltdContext) {
                                 $searchNorm = strtoupper(preg_replace('/\s+/', '', trim($machineName)));
+                                $pltdNorm = strtoupper($pltdContext);
                                 
-                                // Try exact match on kode_mesin first
+                                // 1. Find candidates
+                                $candidates = [];
+                                
+                                // Exact/SILM match
                                 if (isset($assetLookup[$searchNorm])) {
-                                    return $assetLookup[$searchNorm];
+                                    $candidates = $assetLookup[$searchNorm];
                                 }
                                 
-                                // Try match on SILM
-                                if (isset($assetLookupBySilm[$searchNorm])) {
-                                    return $assetLookupBySilm[$searchNorm];
-                                }
+                                if (empty($candidates)) return null;
                                 
-                                // Try partial match on both
-                                foreach ($assetLookup as $key => $asset) {
-                                    if (strpos($key, $searchNorm) !== false || strpos($searchNorm, $key) !== false) {
-                                        return $asset;
+                                // 2. Filter candidates by PLTD Context
+                                // We try to match the $pltdContext (e.g., "PLTD Kuala Lapang") 
+                                // with the asset's unit_pembangkit_common or sentral.
+                                
+                                $bestMatch = null;
+                                $highestScore = 0;
+
+                                foreach ($candidates as $asset) {
+                                    $assetPltd = strtoupper($asset->unit_pembangkit_common . ' ' . $asset->sentral);
+                                    
+                                    // Check overlap
+                                    // Remove "PLTD" from context for better matching
+                                    $contextClean = trim(str_replace('PLTD', '', $pltdNorm));
+                                    
+                                    if (str_contains($assetPltd, $contextClean)) {
+                                        return $asset; // Strong match
+                                    }
+                                    
+                                    // Fallback: Similarity score
+                                    similar_text($assetPltd, $pltdNorm, $percent);
+                                    if ($percent > $highestScore) {
+                                        $highestScore = $percent;
+                                        $bestMatch = $asset;
                                     }
                                 }
                                 
-                                // Try match by trailing digits (e.g., "1001" matches "225570308010001")
-                                if (preg_match('/\d+$/', $searchNorm, $matches)) {
-                                    $trailingDigits = $matches[0];
-                                    foreach ($assetLookup as $key => $asset) {
-                                        if (preg_match('/' . preg_quote($trailingDigits) . '$/', $key)) {
-                                            return $asset;
-                                        }
-                                    }
-                                }
-                                
-                                return null;
+                                // Return best match only if it matches the context reasonably well
+                                return ($highestScore > 40) ? $bestMatch : null;
                             }
                         @endphp
 
@@ -793,7 +829,7 @@
                                                         <div class="machines-list">
                                                             @forelse($machineNames as $machineName)
                                                                 @php
-                                                                    $machine = findMachine($machineName, $assetLookup, $assetLookupBySilm);
+                                                                    $machine = findMachine($machineName, $assetLookup, $pltdName);
                                                                     
                                                                     $status = 'safe';
                                                                     $displayName = $machineName;
@@ -808,9 +844,12 @@
                                                                         $fault = $machine->fault ?? 0;
                                                                         $matchedCode = $machine->kode_mesin;
                                                                         
-                                                                        // Use SILM code for display if available
-                                                                        if ($machine->kode_mesin_silm) {
-                                                                            $displayName = $machine->kode_mesin_silm;
+                                                                        // Use inisial_mesin if available, otherwise SILM, otherwise machineName
+                                                                        if (!empty($machine->inisial_mesin) && $machine->inisial_mesin !== '-') {
+                                                                            $displayName = $machine->inisial_mesin;
+                                                                        } elseif (!empty($machine->kode_mesin_silm) && $machine->kode_mesin_silm !== '-') {
+                                                                             // Optional: Use SILM if you want, but user prefers short or initial.
+                                                                             // $displayName = $machine->kode_mesin_silm;
                                                                         }
                                                                         
                                                                         // Determine status - check actual values
@@ -822,15 +861,35 @@
                                                                             $status = 'safe';
                                                                         }
                                                                     }
+
+
+                                                                    // LINK GENERATION
+                                                                    $linkUrl = '#';
+                                                                    $isClickable = false;
+                                                                    if ($status === 'warning') {
+                                                                        $linkUrl = route('detail-warning.index', ['search' => $matchedCode]);
+                                                                        $isClickable = true;
+                                                                    } elseif ($status === 'fault') {
+                                                                        $linkUrl = route('detail-fault.index', ['search' => $matchedCode]);
+                                                                        $isClickable = true;
+                                                                    }
                                                                 @endphp
 
-                                                                <div class="machine-item-text {{ $status }}" title="[DBG: {{ $machineName }}→{{ $matchedCode }}] Safe: {{ $safe }} | Warning: {{ $warning }} | Fault: {{ $fault }} - {{ $machine->keterangan ?? '' }}">
+                                                                @if($isClickable)
+                                                                <a href="{{ $linkUrl }}" style="text-decoration: none; display: block;">
+                                                                @endif
+                                                                
+                                                                <div class="machine-item-text {{ $status }}" title="[Code: {{ $matchedCode }}] Safe: {{ $safe }} | Warning: {{ $warning }} | Fault: {{ $fault }} - {{ $machine->keterangan ?? '' }}">
                                                                     <div class="machine-icon">
                                                                         <img src="/images/mesin.png" alt="mesin">
                                                                     </div>
                                                                     <span>{{ $displayName }}</span>
                                                                     <div class="status-indicator-badge {{ $status }}"></div>
                                                                 </div>
+
+                                                                @if($isClickable)
+                                                                </a>
+                                                                @endif
                                                             @empty
                                                                 <div style="font-size: 9px; color: #999; padding: 4px 0; font-style: italic;">
                                                                     (Tanpa mesin)
@@ -912,60 +971,67 @@
 
                     <!-- TAB 4: DETAIL FAULT -->
                     <div id="tab-fault" class="tab-content">
-                        <div style="margin-bottom: 15px; display: flex; gap: 10px;">
-                            <a href="{{ route('detail-fault.create') }}" class="btn-tambah">➕ Tambah Detail Fault</a>
-                        </div>
+                        <div style="display: flex; gap: 20px; align-items: flex-start;">
+                            <!-- LEFT SIDE: TABLE -->
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                                    <a href="{{ route('detail-fault.create') }}" class="btn-tambah">➕ Tambah Detail Fault</a>
+                                </div>
 
-                        <div class="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th style="text-align: center; width: 50px;">NO</th>
-                                        <th style="width: 150px;">ASSET / MESIN</th>
-                                        <th>UNIT PEMBANGKIT</th>
-                                        <th>TANGGAL IDENTIFIKASI</th>
-                                        <th>STATUS SAAT INI</th>
-                                        <th>ASSET DESCRIPTION</th>
-                                        <th>KONDISI ASET</th>
-                                        <th>ACTION PLAN</th>
-                                        <th>TARGET SELESAI</th>
-                                        <th>PROGRES SAAT INI</th>
-                                        <th>REALISASI SELESAI</th>
-                                        <th>MAIN ISSUE / KENDALA</th>
-                                        <th style="text-align: center; width: 100px;">ACTION</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($detailFaultsAll as $key => $detail)
-                                        <tr>
-                                            <td style="text-align: center;">{{ $key + 1 }}</td>
-                                            <td><strong>{{ $detail->assetWellness->unit_pembangkit_common ?? '-' }}</strong></td>
-                                            <td>{{ $detail->unit_pembangkit }}</td>
-                                            <td>{{ $detail->tanggal_identifikasi ? \Carbon\Carbon::parse($detail->tanggal_identifikasi)->format('d-m-Y') : '-' }}</td>
-                                            <td>{{ $detail->status_saat_ini ?? '-' }}</td>
-                                            <td>{{ $detail->asset_description ?? '-' }}</td>
-                                            <td>{{ $detail->kondisi_aset ?? '-' }}</td>
-                                            <td>{{ $detail->action_plan ?? '-' }}</td>
-                                            <td>{{ $detail->target_selesai ? \Carbon\Carbon::parse($detail->target_selesai)->format('d-m-Y') : '-' }}</td>
-                                            <td>{{ $detail->progres_saat_ini ?? '-' }}</td>
-                                            <td>{{ $detail->realisasi_selesai ? \Carbon\Carbon::parse($detail->realisasi_selesai)->format('d-m-Y') : '-' }}</td>
-                                            <td>{{ $detail->main_issue_kendala ?? '-' }}</td>
-                                            <td style="text-align: center; display: flex; justify-content: center; gap: 5px;">
-                                                <a href="{{ route('detail-fault.show', $detail->id) }}" class="btn-edit">✏️ Edit</a>
-                                                <form action="{{ route('detail-fault.destroy', $detail->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Yakin hapus?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn-hapus">🗑️ Hapus</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="13" style="padding: 20px; text-align: center; color: #999;">Tidak ada data</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                                <div class="table-wrapper">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align: center; width: 50px;">NO</th>
+                                                <th style="width: 150px;">ASSET / MESIN</th>
+                                                <th>UNIT PEMBANGKIT</th>
+                                                <th>TANGGAL IDENTIFIKASI</th>
+                                                <th>STATUS SAAT INI</th>
+                                                <th>ASSET DESCRIPTION</th>
+                                                <th>KONDISI ASET</th>
+                                                <th>ACTION PLAN</th>
+                                                <th>TARGET SELESAI</th>
+                                                <th>PROGRES SAAT INI</th>
+                                                <th>REALISASI SELESAI</th>
+                                                <th>MAIN ISSUE / KENDALA</th>
+                                                <th style="text-align: center; width: 100px;">ACTION</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($detailFaultsAll as $key => $detail)
+                                                <tr>
+                                                    <td style="text-align: center;">{{ $key + 1 }}</td>
+                                                    <td><strong>{{ $detail->assetWellness->unit_pembangkit_common ?? '-' }}</strong></td>
+                                                    <td>{{ $detail->unit_pembangkit }}</td>
+                                                    <td>{{ $detail->tanggal_identifikasi ? \Carbon\Carbon::parse($detail->tanggal_identifikasi)->format('d-m-Y') : '-' }}</td>
+                                                    <td>{{ $detail->status_saat_ini ?? '-' }}</td>
+                                                    <td>{{ $detail->asset_description ?? '-' }}</td>
+                                                    <td>{{ $detail->kondisi_aset ?? '-' }}</td>
+                                                    <td>{{ $detail->action_plan ?? '-' }}</td>
+                                                    <td>{{ $detail->target_selesai ? \Carbon\Carbon::parse($detail->target_selesai)->format('d-m-Y') : '-' }}</td>
+                                                    <td>{{ $detail->progres_saat_ini ?? '-' }}</td>
+                                                    <td>{{ $detail->realisasi_selesai ? \Carbon\Carbon::parse($detail->realisasi_selesai)->format('d-m-Y') : '-' }}</td>
+                                                    <td>{{ $detail->main_issue_kendala ?? '-' }}</td>
+                                                    <td style="text-align: center; display: flex; justify-content: center; gap: 5px;">
+                                                        <a href="{{ route('detail-fault.show', $detail->id) }}" class="btn-edit">✏️ Edit</a>
+                                                        <form action="{{ route('detail-fault.destroy', $detail->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Yakin hapus?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn-hapus">🗑️ Hapus</button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="13" style="padding: 20px; text-align: center; color: #999;">Tidak ada data</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT SIDE: VISUALIZATION REMOVED -->
                         </div>
                     </div>
 
@@ -992,24 +1058,24 @@
                             <!-- FILTER SECTION -->
                             <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; align-items: center;">
                                 <form method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center; justify-content: center;">
-                                    <select name="sentral_filter" onchange="this.form.submit()" style="padding: 12px 20px; border: 2px solid #ddd; border-radius: 25px; font-size: 14px; cursor: pointer; background: white; font-weight: 500; min-width: 140px; transition: all 0.3s;">
+                                    <select name="sentral" onchange="this.form.submit()" style="padding: 12px 20px; border: 2px solid #ddd; border-radius: 25px; font-size: 14px; cursor: pointer; background: white; font-weight: 500; min-width: 140px; transition: all 0.3s;">
                                         <option value="">-- Sentral --</option>
                                         @foreach($sentrlList as $s)
-                                            <option value="{{ $s }}" {{ request('sentral_filter') == $s ? 'selected' : '' }}>{{ $s }}</option>
+                                            <option value="{{ $s }}" {{ request('sentral') == $s ? 'selected' : '' }}>{{ $s }}</option>
                                         @endforeach
                                     </select>
 
-                                    <select name="bulan_filter" onchange="this.form.submit()" style="padding: 12px 20px; border: 2px solid #ddd; border-radius: 25px; font-size: 14px; cursor: pointer; background: white; font-weight: 500; min-width: 140px; transition: all 0.3s;">
+                                    <select name="bulan" onchange="this.form.submit()" style="padding: 12px 20px; border: 2px solid #ddd; border-radius: 25px; font-size: 14px; cursor: pointer; background: white; font-weight: 500; min-width: 140px; transition: all 0.3s;">
                                         <option value="">-- Bulan --</option>
                                         @foreach($bulanList as $key => $value)
-                                            <option value="{{ $key }}" {{ request('bulan_filter') == $key ? 'selected' : '' }}>{{ $value }}</option>
+                                            <option value="{{ $key }}" {{ request('bulan') == $key ? 'selected' : '' }}>{{ $value }}</option>
                                         @endforeach
                                     </select>
 
-                                    <select name="tahun_filter" onchange="this.form.submit()" style="padding: 12px 20px; border: 2px solid #ddd; border-radius: 25px; font-size: 14px; cursor: pointer; background: white; font-weight: 500; min-width: 140px; transition: all 0.3s;">
+                                    <select name="tahun" onchange="this.form.submit()" style="padding: 12px 20px; border: 2px solid #ddd; border-radius: 25px; font-size: 14px; cursor: pointer; background: white; font-weight: 500; min-width: 140px; transition: all 0.3s;">
                                         <option value="">-- Tahun --</option>
                                         @foreach($years as $year)
-                                            <option value="{{ $year }}" {{ request('tahun_filter') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                            <option value="{{ $year }}" {{ request('tahun') == $year ? 'selected' : '' }}>{{ $year }}</option>
                                         @endforeach
                                     </select>
                                 </form>

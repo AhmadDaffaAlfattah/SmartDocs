@@ -213,4 +213,39 @@ class CalendarController extends Controller
         $reminders = Reminder::all();
         return response()->json($reminders);
     }
+    public function getEvents(Request $request)
+    {
+        $reminders = Reminder::all();
+        $events = [];
+
+        foreach ($reminders as $reminder) {
+            $events[] = [
+                'id' => $reminder->id,
+                'title' => $reminder->title,
+                'start' => $reminder->date->format('Y-m-d'),
+                'description' => $reminder->description,
+                'backgroundColor' => '#f1c40f', // Yellowish for reminders
+                'borderColor' => '#f1c40f',
+                'extendedProps' => [
+                    'type' => 'reminder'
+                ]
+            ];
+        }
+
+        // Add holidays to events (simplified)
+        foreach ($this->holidays as $holidayDate) {
+            $events[] = [
+                'id' => 'holiday-' . $holidayDate,
+                'title' => 'Hari Libur Nasional',
+                'start' => $holidayDate,
+                'display' => 'background',
+                'backgroundColor' => '#ffdddd', // Light red background
+                'extendedProps' => [
+                    'type' => 'holiday'
+                ]
+            ];
+        }
+
+        return response()->json($events);
+    }
 }

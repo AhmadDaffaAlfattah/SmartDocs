@@ -157,9 +157,45 @@
                         <div class="alert-success">✅ {{ $message }}</div>
                     @endif
 
-                    <div>
-                        <a href="{{ route('asset-wellness.index') }}" class="btn-back">← Kembali</a>
-                        <a href="{{ route('detail-fault.create') }}" class="btn-tambah">➕ Tambah Detail Fault</a>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <a href="{{ route('asset-wellness.index', ['tahun' => $tahun, 'bulan' => $bulan, 'sentral' => $sentral]) }}" class="btn-back">← Kembali</a>
+                            <a href="{{ route('detail-fault.create') }}" class="btn-tambah">➕ Tambah Detail Fault</a>
+                        </div>
+                        
+                        <form action="{{ route('detail-fault.index') }}" method="GET" style="display: flex; gap: 8px; align-items: center;">
+                            <!-- Month Filter -->
+                            <select name="bulan" onchange="this.form.submit()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">-- Semua Bulan --</option>
+                                @foreach($months as $key => $name)
+                                    <option value="{{ $key }}" {{ request('bulan') == $key ? 'selected' : '' }}>{{ $name }}</option>
+                                @endforeach
+                            </select>
+
+                            <!-- Year Filter -->
+                            <select name="tahun" onchange="this.form.submit()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">-- Semua Tahun --</option>
+                                @foreach($years as $year)
+                                    <option value="{{ $year }}" {{ request('tahun') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                @endforeach
+                            </select>
+
+                            <!-- Sentral Filter -->
+                            <select name="sentral" onchange="this.form.submit()" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; max-width: 150px;">
+                                <option value="">-- Semua Sentral --</option>
+                                @foreach($sentralList as $s)
+                                    <option value="{{ $s }}" {{ request('sentral') == $s ? 'selected' : '' }}>{{ $s }}</option>
+                                @endforeach
+                            </select>
+
+                            <!-- Search -->
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Kode/Inisial..." style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 200px;">
+                            <button type="submit" style="padding: 8px 12px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">🔍 Cari</button>
+                            
+                            @if(request('search') || request('bulan') || request('tahun') || request('sentral'))
+                                <a href="{{ route('detail-fault.index') }}" style="padding: 8px 12px; background: #999; color: white; border: none; border-radius: 4px; text-decoration: none;">Reset</a>
+                            @endif
+                        </form>
                     </div>
 
                     <div class="table-wrapper">

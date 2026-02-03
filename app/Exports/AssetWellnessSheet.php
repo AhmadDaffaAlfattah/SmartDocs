@@ -180,150 +180,16 @@ class AssetWellnessSheet implements FromCollection, WithHeadings, WithStyles, Wi
                     }
                 }
 
-                // Add statistics at the bottom
-                $lastDataRow = $dataStartRow + count($this->assetData);
-                $statsStartRow = $lastDataRow + 2;
-
-                // Statistics header
-                $sheet->setCellValue('H' . $statsStartRow, 'STATISTIK');
-                $sheet->getStyle('H' . $statsStartRow)->applyFromArray([
-                    'font' => ['bold' => true, 'size' => 12],
-                    'alignment' => ['horizontal' => 'left'],
-                ]);
-
-                // Safe statistics
-                $safeRow = $statsStartRow + 2;
-                $sheet->setCellValue('H' . $safeRow, 'Equipment Safe');
-                $sheet->setCellValue('I' . $safeRow, $this->totalSafe);
-                $total = $this->totalSafe + $this->totalWarning + $this->totalFault;
-                $persen_safe = $total > 0 ? round(($this->totalSafe / $total) * 100, 2) : 0;
-                $sheet->setCellValue('M' . $safeRow, $persen_safe . '%');
-                $sheet->getStyle('H' . $safeRow . ':M' . $safeRow)->applyFromArray([
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '90EE90']],
-                    'font' => ['bold' => true],
-                    'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                ]);
-
-                // Warning statistics
-                $warningRow = $safeRow + 1;
-                $sheet->setCellValue('H' . $warningRow, 'Equipment Warning');
-                $sheet->setCellValue('I' . $warningRow, $this->totalWarning);
-                $persen_warning = $total > 0 ? round(($this->totalWarning / $total) * 100, 2) : 0;
-                $sheet->setCellValue('M' . $warningRow, $persen_warning . '%');
-                $sheet->getStyle('H' . $warningRow . ':M' . $warningRow)->applyFromArray([
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'FFD700']],
-                    'font' => ['bold' => true],
-                    'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                ]);
-
-                // Fault statistics
-                $faultRow = $warningRow + 1;
-                $sheet->setCellValue('H' . $faultRow, 'Equipment Fault');
-                $sheet->setCellValue('I' . $faultRow, $this->totalFault);
-                $persen_fault = $total > 0 ? round(($this->totalFault / $total) * 100, 2) : 0;
-                $sheet->setCellValue('M' . $faultRow, $persen_fault . '%');
-                $sheet->getStyle('H' . $faultRow . ':M' . $faultRow)->applyFromArray([
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'FF6B6B']],
-                    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                    'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                ]);
-
-                // Total statistics
-                $totalRow = $faultRow + 1;
-                $sheet->setCellValue('H' . $totalRow, 'TOTAL');
-                $sheet->setCellValue('I' . $totalRow, $total);
-                $sheet->setCellValue('M' . $totalRow, '100%');
-                $sheet->getStyle('H' . $totalRow . ':M' . $totalRow)->applyFromArray([
-                    'font' => ['bold' => true, 'size' => 11],
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'D3D3D3']],
-                    'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                ]);
-
-                // Add Pie Chart data below statistics
-                $chartStartRow = $totalRow + 3;
-
-                // Add chart title
-                $sheet->setCellValue('H' . $chartStartRow, 'PIE CHART ASSET WELLNESS');
-                $sheet->getStyle('H' . $chartStartRow)->applyFromArray([
-                    'font' => ['bold' => true, 'size' => 11],
-                    'alignment' => ['horizontal' => 'left'],
-                ]);
-
-                // Create pie chart data table
-                $chartDataStartRow = $chartStartRow + 2;
-                $sheet->setCellValue('H' . $chartDataStartRow, 'Status');
-                $sheet->setCellValue('I' . $chartDataStartRow, 'Jumlah');
-                $sheet->setCellValue('J' . $chartDataStartRow, 'Persentase');
-                $sheet->getStyle('H' . $chartDataStartRow . ':J' . $chartDataStartRow)->applyFromArray([
-                    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '4472C4']],
-                    'alignment' => ['horizontal' => 'center'],
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        ],
-                    ],
-                ]);
-
-                // Calculate total for percentages
-                $total = $this->totalSafe + $this->totalWarning + $this->totalFault;
-                $persen_safe_chart = $total > 0 ? round(($this->totalSafe / $total) * 100, 2) : 0;
-                $persen_warning_chart = $total > 0 ? round(($this->totalWarning / $total) * 100, 2) : 0;
-                $persen_fault_chart = $total > 0 ? round(($this->totalFault / $total) * 100, 2) : 0;
-
-                // Safe data
-                $chartSafeRow = $chartDataStartRow + 1;
-                $sheet->setCellValue('H' . $chartSafeRow, 'Safe');
-                $sheet->setCellValue('I' . $chartSafeRow, $this->totalSafe);
-                $sheet->setCellValue('J' . $chartSafeRow, $persen_safe_chart . '%');
-                $sheet->getStyle('H' . $chartSafeRow . ':J' . $chartSafeRow)->applyFromArray([
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '90EE90']],
-                    'font' => ['bold' => true],
-                    'alignment' => ['horizontal' => 'center'],
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        ],
-                    ],
-                ]);
-
-                // Warning data
-                $chartWarningRow = $chartSafeRow + 1;
-                $sheet->setCellValue('H' . $chartWarningRow, 'Warning');
-                $sheet->setCellValue('I' . $chartWarningRow, $this->totalWarning);
-                $sheet->setCellValue('J' . $chartWarningRow, $persen_warning_chart . '%');
-                $sheet->getStyle('H' . $chartWarningRow . ':J' . $chartWarningRow)->applyFromArray([
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'FFD700']],
-                    'font' => ['bold' => true],
-                    'alignment' => ['horizontal' => 'center'],
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        ],
-                    ],
-                ]);
-
-                // Fault data
-                $chartFaultRow = $chartWarningRow + 1;
-                $sheet->setCellValue('H' . $chartFaultRow, 'Fault');
-                $sheet->setCellValue('I' . $chartFaultRow, $this->totalFault);
-                $sheet->setCellValue('J' . $chartFaultRow, $persen_fault_chart . '%');
-                $sheet->getStyle('H' . $chartFaultRow . ':J' . $chartFaultRow)->applyFromArray([
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'FF6B6B']],
-                    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                    'alignment' => ['horizontal' => 'center'],
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        ],
-                    ],
-                ]);
+                // Auto size columns
+                foreach(range('A','O') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
             }
         ];
     }
 
     public function title(): string
     {
-        return 'Form Penyimpanan';
+        return 'Form Penyampaian';
     }
 }

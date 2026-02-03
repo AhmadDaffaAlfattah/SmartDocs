@@ -87,7 +87,8 @@ class AssetWellnessController extends Controller
             'tahun' => 'required',
             'bulan' => 'required',
             'sentral' => 'nullable',
-            'keterangan' => 'nullable'
+            'keterangan' => 'nullable',
+            'inisial_mesin' => 'nullable'
         ]);
 
         AssetWellness::create($validated);
@@ -113,12 +114,23 @@ class AssetWellnessController extends Controller
             'safe' => 'required|integer',
             'warning' => 'required|integer',
             'fault' => 'required|integer',
-            'keterangan' => 'nullable'
+            'keterangan' => 'nullable',
+            'inisial_mesin' => 'nullable',
+            'tipe_aset' => 'nullable',
+            'kode_mesin_silm' => 'nullable',
+            'daya_terpasang' => 'nullable',
+            'daya_mampu_netto' => 'nullable',
+            'daya_mampu_pasok' => 'nullable',
+            'status_operasi' => 'nullable'
         ]);
 
         $assetWellness->update($validated);
 
-        return redirect()->route('asset-wellness.index')->with('success', 'Data berhasil diubah!');
+        return redirect()->route('asset-wellness.index', [
+            'tahun' => $assetWellness->tahun,
+            'bulan' => $assetWellness->bulan,
+            'sentral' => $assetWellness->sentral
+        ])->with('success', 'Data berhasil diubah!');
     }
 
     public function destroy(AssetWellness $assetWellness)
@@ -282,14 +294,106 @@ class AssetWellnessController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $tahun = $request->get('tahun');
-        $bulan = $request->get('bulan');
+        $tahun = $request->get('tahun', '2025');
+        $bulan = $request->get('bulan', '12');
         $sentral = $request->get('sentral');
 
         $filename = 'Laporan_Asset_Wellness_' . $tahun . '_' . $bulan . '.xlsx';
 
+        // 1. Calculate stats for charts
+        $query = AssetWellness::query();
+        if ($tahun) $query->where('tahun', $tahun);
+        if ($bulan) $query->where('bulan', $bulan);
+        if ($sentral) $query->where('sentral', $sentral);
+        $assets = $query->get();
+
+        $totalSafe = $assets->sum('safe');
+        $totalWarning = $assets->sum('warning');
+        $totalFault = $assets->sum('fault');
+
+        $monthlyIssues = [];
+        $bulanList = [
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+            '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+            '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+        ];
+        
+        foreach ($bulanList as $monthKey => $monthName) {
+            $monthlyQuery = AssetWellness::where('tahun', $tahun)->where('bulan', $monthKey);
+            if ($sentral) {
+                $monthlyQuery->where('sentral', $sentral);
+            }
+            $warningFault = $monthlyQuery->get()->sum(function ($item) {
+                return $item->warning + $item->fault;
+            });
+            $monthlyIssues[$monthName] = $warningFault;
+        }
+
+        // 2. Generate Chart Images
+        $pieConfig = [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => ['Safe', 'Warning', 'Fault'],
+                'datasets' => [[
+                    'data' => [$totalSafe, $totalWarning, $totalFault],
+                    'backgroundColor' => ['#90EE90', '#FFD700', '#FF6B6B']
+                ]]
+            ],
+            'options' => [
+                'plugins' => [
+                    'legend' => ['position' => 'bottom'],
+                    'datalabels' => ['display' => true, 'color' => '#333', 'font' => ['size' => 14, 'weight' => 'bold']]
+                ]
+            ]
+        ];
+
+        $barConfig = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => array_keys($monthlyIssues),
+                'datasets' => [[
+                    'label' => 'Issues',
+                    'data' => array_values($monthlyIssues),
+                    'backgroundColor' => '#FF7B54'
+                ]]
+            ],
+            'options' => [
+                'plugins' => ['legend' => ['display' => false]],
+                'scales' => [
+                    'y' => [
+                        'ticks' => ['stepSize' => 1] 
+                    ]
+                ]
+            ]
+        ];
+
+        $fetchChartImage = function($config) {
+            try {
+                $url = 'https://quickchart.io/chart?w=400&h=300&c=' . urlencode(json_encode($config));
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                $data = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if ($httpCode == 200 && $data) {
+                    return $data; // Return raw data for Excel (to save to temp file)
+                }
+                return null;
+            } catch (\Exception $e) {
+                return null;
+            }
+        };
+
+        $pieChartData = $fetchChartImage($pieConfig);
+        $barChartData = $fetchChartImage($barConfig);
+
         return Excel::download(
-            new \App\Exports\AssetWellnessExport($tahun, $bulan, $sentral),
+            new \App\Exports\AssetWellnessExport($tahun, $bulan, $sentral, $monthlyIssues, $pieChartData, $barChartData),
             $filename
         );
     }
@@ -324,32 +428,93 @@ class AssetWellnessController extends Controller
             ->get();
 
         // Calculate monthly warning + fault data for visualization
-        $bulanList = [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember'
-        ];
-
         $monthlyIssues = [];
+        $bulanList = [
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+            '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+            '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+        ];
+        
         foreach ($bulanList as $monthKey => $monthName) {
             $monthlyQuery = AssetWellness::where('tahun', $tahun)->where('bulan', $monthKey);
             if ($sentral) {
                 $monthlyQuery->where('sentral', $sentral);
             }
-            $warningFault = $monthlyQuery->get()->sum(function($item) {
+            $warningFault = $monthlyQuery->get()->sum(function ($item) {
                 return $item->warning + $item->fault;
             });
             $monthlyIssues[$monthName] = $warningFault;
         }
+
+        $totalSafe = $assets->sum('safe');
+        $totalWarning = $assets->sum('warning');
+        $totalFault = $assets->sum('fault');
+
+        // Generate QuickChart URLs and fetch images as Base64
+        // Use shorter configuration to avoid URL length issues
+        $pieConfig = [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => ['Safe', 'Warning', 'Fault'],
+                'datasets' => [[
+                    'data' => [$totalSafe, $totalWarning, $totalFault],
+                    'backgroundColor' => ['#90EE90', '#FFD700', '#FF6B6B']
+                ]]
+            ],
+            'options' => [
+                'plugins' => [
+                    'legend' => ['position' => 'bottom'],
+                    'datalabels' => ['display' => true, 'color' => '#333', 'font' => ['size' => 14, 'weight' => 'bold']]
+                ]
+            ]
+        ];
+
+        $barConfig = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => array_keys($monthlyIssues),
+                'datasets' => [[
+                    'label' => 'Issues',
+                    'data' => array_values($monthlyIssues),
+                    'backgroundColor' => '#FF7B54'
+                ]]
+            ],
+            'options' => [
+                'plugins' => ['legend' => ['display' => false]],
+                'scales' => [
+                    'y' => [
+                        'ticks' => ['stepSize' => 1] 
+                    ]
+                ]
+            ]
+        ];
+
+        // Helper to fetch and encode image
+        $fetchChartImage = function($config) {
+            try {
+                $url = 'https://quickchart.io/chart?w=400&h=300&c=' . urlencode(json_encode($config));
+                // Use curl for better reliability on Windows/Laragon
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Ignore SSL for local dev
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                $data = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if ($httpCode == 200 && $data) {
+                    return 'data:image/png;base64,' . base64_encode($data);
+                }
+                return null;
+            } catch (\Exception $e) {
+                return null;
+            }
+        };
+
+        $pieChartBase64 = $fetchChartImage($pieConfig);
+        $barChartBase64 = $fetchChartImage($barConfig);
 
         // Load the Blade view and convert to PDF
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.asset_wellness_pdf_report', [
@@ -359,92 +524,236 @@ class AssetWellnessController extends Controller
             'tahun' => $tahun,
             'bulan' => $bulan,
             'sentral' => $sentral,
+            'pieChartBase64' => $pieChartBase64,
+            'barChartBase64' => $barChartBase64,
             'monthlyIssues' => $monthlyIssues,
-            'bulanList' => $bulanList
+            'totalSafe' => $totalSafe,
+            'totalWarning' => $totalWarning,
+            'totalFault' => $totalFault
         ]);
-
 
         $pdf->setPaper('a4', 'portrait');
         $pdf->setOption('margin-top', 10);
         $pdf->setOption('margin-bottom', 10);
         $pdf->setOption('margin-left', 10);
         $pdf->setOption('margin-right', 10);
+        $pdf->setOption('isRemoteEnabled', true);
+        $pdf->setOption('isHtml5ParserEnabled', true);
 
         $filename = 'Laporan_Asset_Wellness_' . $tahun . '_' . $bulan . '_' . date('YmdHis') . '.pdf';
 
         return $pdf->download($filename);
     }
 
-    public function exportPdfScreenshots(Request $request)
+    public function importExcel(Request $request)
     {
-        $tahun = $request->input('tahun', '2025');
-        $bulan = $request->input('bulan', '12');
-        $sentral = $request->input('sentral', '');
-
-        // Get data for PDF
-        $query = AssetWellness::query();
-        if ($tahun) {
-            $query->where('tahun', $tahun);
-        }
-        if ($bulan) {
-            $query->where('bulan', $bulan);
-        }
-        if ($sentral) {
-            $query->where('sentral', $sentral);
-        }
-
-        $assets = $query->orderBy('kode_mesin')->get();
-        $detailWarnings = \App\Models\DetailWarning::with('assetWellness')->orderBy('created_at', 'desc')->get();
-        $detailFaults = \App\Models\DetailFault::with('assetWellness')->orderBy('created_at', 'desc')->get();
-
-        // Calculate monthly warning + fault data for visualization
-        $bulanList = [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember'
-        ];
-
-        $monthlyIssues = [];
-        foreach ($bulanList as $monthKey => $monthName) {
-            $monthlyQuery = AssetWellness::where('tahun', $tahun)->where('bulan', $monthKey);
-            if ($sentral) {
-                $monthlyQuery->where('sentral', $sentral);
-            }
-            $warningFault = $monthlyQuery->get()->sum(function($item) {
-                return $item->warning + $item->fault;
-            });
-            $monthlyIssues[$monthName] = $warningFault;
-        }
-
-        // Render as HTML PDF - using existing proven template
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.asset_wellness_pdf_report', [
-            'assets' => $assets,
-            'detailWarnings' => $detailWarnings,
-            'detailFaults' => $detailFaults,
-            'tahun' => $tahun,
-            'bulan' => $bulan,
-            'sentral' => $sentral,
-            'monthlyIssues' => $monthlyIssues,
-            'bulanList' => $bulanList
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
         ]);
 
-        $pdf->setPaper('a4', 'portrait');
-        $pdf->setOption('margin-top', 10);
-        $pdf->setOption('margin-bottom', 10);
-        $pdf->setOption('margin-left', 10);
-        $pdf->setOption('margin-right', 10);
+        $file = $request->file('file');
+        
+        // 1. DATA CONTEXT (TAHUN & BULAN) LOGIC
+        // Priority: 1. Filename Parsing, 2. Form Input, 3. Current Date
+        
+        $filename = $file->getClientOriginalName();
+        $filename = str_replace(['.xlsx', '.xls', '.csv'], '', $filename);
+        
+        // Defaults
+        $tahun = $request->get('tahun') ?: date('Y');
+        $bulanNum = $request->get('bulan') ?: date('m');
+        $sentral = $request->get('sentral');
 
-        $filename = 'Laporan_Asset_Wellness_' . $tahun . '_' . $bulan . '_' . date('YmdHis') . '.pdf';
+        // Parse Filename (e.g., "Asset_November_2025" or "Data_11_2024")
+        $foundMonth = false;
+        $foundYear = false;
 
-        return $pdf->download($filename);
+        // Extract Year (4 digits)
+        if (preg_match('/20\d{2}/', $filename, $matches)) {
+            $tahun = $matches[0];
+            $foundYear = true;
+        }
+
+        // Extract Month (Name or Number)
+        $indoMonths = [
+            'januari' => '01', 'februari' => '02', 'maret' => '03', 'april' => '04',
+            'mei' => '05', 'juni' => '06', 'juli' => '07', 'agustus' => '08',
+            'september' => '09', 'oktober' => '10', 'november' => '11', 'desember' => '12',
+            'jan' => '01', 'feb' => '02', 'mar' => '03', 'apr' => '04', 'may' => '05', 'jun' => '06',
+            'jul' => '07', 'aug' => '08', 'sep' => '09', 'oct' => '10', 'nov' => '11', 'dec' => '12'
+        ];
+
+        // Check for month names in filename
+        $lowerFilename = strtolower($filename);
+        foreach ($indoMonths as $name => $num) {
+            if (str_contains($lowerFilename, $name)) {
+                $bulanNum = $num;
+                $foundMonth = true;
+                break;
+            }
+        }
+
+        // Final formatting
+        $bulan = str_pad($bulanNum, 2, '0', STR_PAD_LEFT);
+
+        try {
+            $data = Excel::toArray(new \stdClass, $file);
+            if (empty($data) || empty($data[0])) throw new \Exception("File kosong.");
+            $rows = $data[0];
+
+            $data = Excel::toArray(new \App\Imports\AssetWellnessImport, $file);
+            if (empty($data) || empty($data[0])) throw new \Exception("File kosong.");
+            $rows = $data[0];
+
+            // CONFIGURATION: User specified Row 13 (Index 12) as Header, Row 14 (Index 13) as Data
+            $targetHeaderIndex = 12; // Row 13
+            $targetDataIndex = 13;   // Row 14
+
+            $colMap = [];
+            $useFixedMapping = false;
+
+            // 2. FIXED MAPPING (Based on Debugging Shift)
+            // Observed: Index 1 = Col A (No), Index 2 = Col B (Sentral), etc.
+            // Mapping:
+            // B(2)=Sentral, C(3)=Tipe, D(4)=KodeM, E(5)=Unit, F(6)=DT, G(7)=DMN, H(8)=DMP
+            // I(9)=TotEq, J(10)=Safe, K(11)=Warn, L(12)=Fault
+            // ... R(18)=Status, S(19)=Ket
+            
+            $count = 0;
+            $cleanNum = function($val) {
+                if (is_string($val)) {
+                    $val = str_replace(',', '.', $val); 
+                }
+                return (float) preg_replace('/[^0-9.\-]/', '', (string)$val); 
+            };
+
+            for ($i = 13; $i < count($rows); $i++) {
+                $row = $rows[$i];
+                
+                // Mandatory KODE MESIN (Col D / Index 4)
+                $kodeMesin = isset($row[4]) ? trim($row[4]) : null;
+                // If empty, careful not to read trash.
+                if (empty($kodeMesin) || strlen($kodeMesin) < 2) continue;
+
+                // Status & Notes (Shifted to 18/19)
+                $rawStatus = $row[18] ?? null;
+                $rawKet = $row[19] ?? null;
+
+                // Synthetic Status Logic (Fixing broken Excel formulas)
+                $status = 'Normal';
+                $ket = '-';
+                
+                $safeVal = $cleanNum($row[10] ?? 0);
+                $warnVal = $cleanNum($row[11] ?? 0);
+                $faultVal = $cleanNum($row[12] ?? 0);
+                $totalVal = $cleanNum($row[9] ?? 0);
+                $tipeAset = $row[3] ?? '';
+
+                // If Raw Value is valid text (not formula), use it. otherwise calculate.
+                if ($rawStatus && !str_starts_with($rawStatus, '=')) {
+                    $status = $rawStatus;
+                } else {
+                    // Calculate
+                    if (stripos($tipeAset, 'COMMON') !== false) {
+                        $status = '-';
+                    } elseif ($faultVal > 0) {
+                        $status = 'Shutdown'; // Or Gangguan
+                    } elseif ($warnVal > 0 || ($totalVal > $safeVal)) {
+                        $status = 'Derating';
+                    } else {
+                        $status = 'Normal';
+                    }
+                }
+
+                // Similar logic for Keterangan
+                if ($rawKet && !str_starts_with($rawKet, '=')) {
+                    $ket = $rawKet;
+                } else {
+                    if ($status == 'Shutdown') $ket = 'Mesin Gangguan/Shutdown';
+                    elseif ($status == 'Derating') $ket = 'Mesin Derating/Warning';
+                    elseif ($status == 'Normal') $ket = 'Operasi Normal';
+                }
+
+                AssetWellness::updateOrCreate(
+                    [
+                        'kode_mesin' => $kodeMesin,
+                        'tahun' => $tahun,
+                        'bulan' => $bulan,
+                    ],
+                    [
+                        'sentral' => $sentral ?: ($row[2] ?? null),
+                        'tipe_aset' => $row[3] ?? '-',
+                        'unit_pembangkit_common' => $row[5] ?? '-',
+                        
+                        // Daya Columns
+                        'daya_terpasang' => $cleanNum($row[6] ?? 0),
+                        'daya_mampu_netto' => $cleanNum($row[7] ?? 0),
+                        'daya_mampu_pasok' => $cleanNum($row[8] ?? 0),
+                        
+                        // Equipment Stats
+                        'total_equipment' => $cleanNum($row[9] ?? 0),
+                        'safe' => $cleanNum($row[10] ?? 0),
+                        'warning' => $cleanNum($row[11] ?? 0),
+                        'fault' => $cleanNum($row[12] ?? 0),
+                        
+                        'status_operasi' => $status,
+                        'keterangan' => $ket,
+                        
+                        // Auxiliary
+                        'kode_mesin_silm' => $kodeMesin, 
+                        // 'inisial_mesin' => '-', // REMOVED to prevent overwriting manual edits
+                    ]
+                );
+                $count++;
+            }
+
+            if ($count == 0) {
+                 // Debug: Show first row of data specifically
+                 $firstRowDump = json_encode($rows[13] ?? 'Empty');
+                 throw new \Exception("Nol data diproses. Cek format file. Data Baris 14: $firstRowDump");
+            }
+
+            $msg = "Import Sukses! $count data diproses untuk periode " . date("F", mktime(0, 0, 0, $bulan, 10)) . " $tahun.";
+            if ($foundMonth || $foundYear) {
+                $msg .= " (Periode dideteksi dari nama file)";
+            }
+
+            return redirect()->route('asset-wellness.index', ['tahun' => $tahun, 'bulan' => $bulan, 'sentral' => $sentral])
+                             ->with('success', $msg);
+
+        } catch (\Exception $e) {
+            return redirect()->route('asset-wellness.index', ['tahun' => $tahun, 'bulan' => $bulan, 'sentral' => $sentral])
+                             ->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
+    public function destroyPeriod(Request $request)
+    {
+        $request->validate([
+            'tahun' => 'required',
+            'bulan' => 'required', // Should be string 01-12
+        ]);
+
+        $tahun = $request->tahun;
+        $bulan = $request->bulan;
+        $sentral = $request->sentral;
+
+        $query = AssetWellness::where('tahun', $tahun)->where('bulan', $bulan);
+        
+        // If sentral is specific (not empty), filter by it. If "All", delete all for that month?
+        // Usually filtering UI sends empty string or specific value.
+        if (!empty($sentral) && $sentral !== 'All') {
+            $query->where('sentral', $sentral);
+            $msg = "Data Sentral $sentral untuk periode Bulan $bulan Tahun $tahun berhasil dihapus.";
+        } else {
+            $msg = "Seluruh Data untuk periode Bulan $bulan Tahun $tahun berhasil dihapus.";
+        }
+
+        $count = $query->delete();
+
+        if ($count == 0) {
+             return redirect()->back()->with('error', "Tidak ada data yang dihapus untuk periode tersebut.");
+        }
+
+        return redirect()->back()->with('success', "$msg Total: $count row.");
     }
 }

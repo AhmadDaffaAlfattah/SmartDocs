@@ -62,8 +62,17 @@ class PemeliharaanDocument extends Model
      */
     public static function getFolders()
     {
-        return Folder::whereNull('parent_id')
-            ->with('children.children.children')
-            ->get();
+        $folder = Folder::where('nama_folder', 'Pemeliharaan')
+            ->whereNull('parent_id')
+            ->first();
+
+        if (!$folder) {
+            return [];
+        }
+
+        return $folder->children()
+            ->orderBy('urutan', 'asc')
+            ->pluck('nama_folder')
+            ->toArray();
     }
 }

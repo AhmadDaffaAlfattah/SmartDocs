@@ -1,0 +1,22 @@
+Verifikasi PDF Export Asset Wellness:
+
+1.  **Peta Mesin (Halaman 2)**:
+    -   Implemented using HTML Tables instead of Flexbox to ensure compatibility with `dompdf`.
+    -   Logic for displaying Safe/Warning/Fault status for each machine is included (`findMachinePdf` helper).
+    -   Structure follows the defined hierarchy: UP -> UL -> PLTD -> Mesin.
+
+2.  **Visualisasi Data (Halaman 5)**:
+    -   Implemented using `QuickChart.io` API to generate static images of the charts.
+    -   Controller logic updated to prepare data and generate URLs for:
+        -   Pie Chart (Safe vs Warning vs Fault distribution).
+        -   Bar Chart (Monthly Issues timeline).
+    -   Added Statistics Cards (Safe, Warning, Fault counts) using HTML tables.
+
+3.  **PDF Configuration**:
+    -   Enabled `isRemoteEnabled` = `true` in `AssetWellnessController` to allow downloading the chart images from QuickChart.
+
+4.  **Files Modified**:
+    -   `app/Http/Controllers/AssetWellnessController.php`
+    -   `resources/views/exports/asset_wellness_pdf_report.blade.php`
+
+The PDF output should now match the web view structure as requested, with the Map on Page 2 and Charts on Page 5.

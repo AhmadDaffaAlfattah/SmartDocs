@@ -4,177 +4,116 @@
     <meta charset="UTF-8">
     <title>Laporan Asset Wellness</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; font-size: 11px; line-height: 1.4; color: #333; }
+        .page { page-break-after: always; padding: 20px; min-height: 27.7cm; }
+        .page:last-child { page-break-after: avoid; }
+        .header-report { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #333; padding-bottom: 10px; }
+        .header-report h1 { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+        .header-report p { font-size: 12px; margin-bottom: 3px; }
+        .report-date { font-size: 11px; margin-top: 5px; font-style: italic; }
+        
+        .section-title { font-size: 14px; font-weight: bold; text-align: center; margin: 20px 0; background-color: #f0f0f0; padding: 8px; border-left: 4px solid #0066cc; border-right: 1px solid #ddd; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        table thead { background-color: #333; color: white; }
+        table th { padding: 6px; text-align: left; font-weight: bold; font-size: 10px; border: 1px solid #333; }
+        table td { padding: 5px; border: 1px solid #ddd; font-size: 10px; }
+        table tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        
+        .status-safe { background-color: #90EE90 !important; font-weight: bold; }
+        .status-warning { background-color: #FFD700 !important; font-weight: bold; }
+        .status-fault { background-color: #FF6B6B !important; color: white; font-weight: bold; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        
+        .summary { margin-top: 10px; padding: 10px; background-color: #f5f5f5; border: 1px solid #ddd; }
+        .summary-title { font-weight: bold; margin-bottom: 10px; font-size: 11px; }
+        .summary-item { display: block; border-bottom: 1px solid #ddd; padding: 3px 0; }
+        .summary-item strong { float: right; }
 
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            line-height: 1.4;
-            color: #333;
-        }
+        /* Map Styles */
+        .map-table td { border: none !important; padding: 0; vertical-align: top; }
+        .ul-box { border: 2px solid #5dade2; padding: 5px; margin: 5px; border-radius: 4px; background: white; width: 100%; }
+        .ul-header { background: #5dade2; color: white; font-weight: bold; text-align: center; padding: 4px; font-size: 10px; margin-bottom: 5px; }
+        .pltd-group { background: #f0f8ff; padding: 4px; margin-bottom: 5px; border-left: 2px solid #5dade2; }
+        .pltd-name { font-weight: bold; font-size: 9px; margin-bottom: 3px; border-bottom: 1px dashed #ccc; }
+        .machine-item { font-size: 8px; padding: 2px 4px; margin-bottom: 2px; border-radius: 2px; }
+        .machine-safe { background: #e8f5e9; color: #2e7d32; border-left: 2px solid #4CAF50; }
+        .machine-warning { background: #fffde7; color: #333; border-left: 2px solid #FFD700; }
+        .machine-fault { background: #ffebee; color: #c62828; border-left: 2px solid #FF6B6B; }
 
-        .page {
-            page-break-after: always;
-            padding: 20px;
-            min-height: 27.7cm;
-        }
-
-        .page:last-child {
-            page-break-after: avoid;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #333;
-            padding-bottom: 15px;
-        }
-
-        .header h1 {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .header h2 {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .header p {
-            font-size: 10px;
-            margin-bottom: 3px;
-        }
-
-        .page-title {
-            font-size: 13px;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0 20px 0;
-            background-color: #f0f0f0;
-            padding: 10px;
-            border: 1px solid #999;
-        }
-            background-color: #f0f0f0;
-            padding: 8px;
-            border-left: 4px solid #0066cc;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
-        table thead {
-            background-color: #333;
-            color: white;
-        }
-        table th {
-            padding: 8px;
-            text-align: left;
-            font-weight: bold;
-            font-size: 10px;
-            border: 1px solid #333;
-        }
-        table td {
-            padding: 6px;
-            border: 1px solid #ddd;
-            font-size: 10px;
-        }
-        table tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        table tbody tr:hover {
-            background-color: #f0f0f0;
-        }
-        .status-safe {
-            background-color: #90EE90 !important;
-            font-weight: bold;
-        }
-        .status-warning {
-            background-color: #FFD700 !important;
-            font-weight: bold;
-        }
-        .status-fault {
-            background-color: #FF6B6B !important;
-            color: white;
-            font-weight: bold;
-        }
-        .text-center {
-            text-align: center;
-        }
-        .text-right {
-            text-align: right;
-        }
-        .summary {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
-        }
-        .summary-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px solid #ddd;
-        }
-        .summary-item:last-child {
-            border-bottom: none;
-        }
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            font-size: 9px;
-            color: #666;
-            text-align: center;
-        }
-        .no-data {
-            text-align: center;
-            padding: 20px;
-            color: #999;
-            font-style: italic;
-        }
-        .chart-container {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-        }
-        .chart-container svg {
-            max-width: 100%;
-            height: auto;
-        }
-        @media print {
-            .page {
-                page-break-after: always;
-            }
-        }
+        /* Vis Styles */
+        .vis-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; background: #fff; page-break-inside: avoid; }
+        .vis-card-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; color: #333; }
+        .stat-box { padding: 10px; border-radius: 4px; text-align: center; margin-bottom: 10px; border: 1px solid #eee; }
     </style>
 </head>
 <body>
-    <!-- HALAMAN 1: FORM PENYAMPAIAN / ASSET WELLNESS -->
+
+    @php
+        // Helper function data prep for Map
+        $ulStructure = [
+            'UL NUNUKAN' => [
+                'PLTD Kuala Lapang' => ['1001', '1002', '1004', '1005', '1007', '1015'],
+                'PLTD Sei Bilal' => ['2001', '2002', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014'],
+                'PLTD Sebatik' => ['3001', '3003', '3006'],
+                'PLTD Tulin Onsoi' => ['4001', '4002', '4003', '4004', '4005', '4006', '4007', '4021'],
+            ],
+            'UL TANJUNG SELOR' => [
+                'PLTD Sambaliung' => ['5001', '5005', '5006', '5007', '5010', '5011', '5012', '5015'],
+                'PLTD Sei Buaya' => ['6002', '6007', '6008', '6009'],
+                'PLTD Bunyu' => [],
+                'PLTD Talisayan' => ['7001', '7002', '7003', '7005'],
+            ],
+            'UL TARAKAN' => [
+                'PLTMG GN Belah' => [],
+            ],
+            'UL BALIKPAPAN' => [
+                'PLTD Batakan' => ['1001', '1002'],
+                'PLTD Gunung Malang' => ['5004', '5008', '5009'],
+                'PLTD Tj Aru' => ['3010', '3011', '8005', '8010', '8011'],
+            ],
+        ];
+
+        $assetLookup = [];
+        $assetLookupBySilm = [];
+        foreach($assets as $asset) {
+            $kodemesinnorm = strtoupper(preg_replace('/\s+/', '', trim($asset->kode_mesin)));
+            $silmnorm = strtoupper(preg_replace('/\s+/', '', trim($asset->kode_mesin_silm ?? '')));
+            if (!empty($kodemesinnorm)) $assetLookup[$kodemesinnorm] = $asset;
+            if (!empty($silmnorm)) $assetLookupBySilm[$silmnorm] = $asset;
+        }
+
+        // Reuse strict logic
+        if (!function_exists('findMachinePdf')) {
+            function findMachinePdf($machineName, $assetLookup, $assetLookupBySilm) {
+                $searchNorm = strtoupper(preg_replace('/\s+/', '', trim($machineName)));
+                if (isset($assetLookup[$searchNorm])) return $assetLookup[$searchNorm];
+                if (isset($assetLookupBySilm[$searchNorm])) return $assetLookupBySilm[$searchNorm];
+                foreach ($assetLookup as $key => $asset) {
+                    if (strpos($key, $searchNorm) !== false || strpos($searchNorm, $key) !== false) return $asset;
+                }
+                if (preg_match('/\d+$/', $searchNorm, $matches)) {
+                    $trailingDigits = $matches[0];
+                    foreach ($assetLookup as $key => $asset) {
+                        if (preg_match('/' . preg_quote($trailingDigits) . '$/', $key)) return $asset;
+                    }
+                }
+                return null;
+            }
+        }
+    @endphp
+
+    <!-- PAGE 1: FORM PENYAMPAIAN -->
     <div class="page">
         <div class="header-report">
             <h1>Laporan Bulanan Asset Wellness</h1>
             <p>PT PLN NUSANTARA POWER / PLN INDONESIA POWER</p>
-            <div class="report-date">
-                Tanggal Pelaporan: {{ now()->format('d-m-Y') }}
-            </div>
+            <div class="report-date">Tanggal Pelaporan: {{ now()->format('d-m-Y') }}</div>
         </div>
-
         <div class="section-title">Form Penyampaian</div>
-
+        
         @if($assets->count() > 0)
         <table>
             <thead>
@@ -188,9 +127,9 @@
                     <th style="width: 5%; text-align: center;">SAFE</th>
                     <th style="width: 5%; text-align: center;">WARN</th>
                     <th style="width: 5%; text-align: center;">FAULT</th>
-                    <th style="width: 6%; text-align: center;">% SAFE</th>
-                    <th style="width: 6%; text-align: center;">% WARN</th>
-                    <th style="width: 6%; text-align: center;">% FAULT</th>
+                    <th style="width: 6%; text-align: center;">% Safe</th>
+                    <th style="width: 6%; text-align: center;">% Warn</th>
+                    <th style="width: 6%; text-align: center;">% Fault</th>
                     <th style="width: 15%;">KETERANGAN</th>
                 </tr>
             </thead>
@@ -201,7 +140,6 @@
                     $safe = $asset->safe ?? 0;
                     $warning = $asset->warning ?? 0;
                     $fault = $asset->fault ?? 0;
-                    
                     $pct_safe = $total > 0 ? round(($safe / $total) * 100, 1) : 0;
                     $pct_warning = $total > 0 ? round(($warning / $total) * 100, 1) : 0;
                     $pct_fault = $total > 0 ? round(($fault / $total) * 100, 1) : 0;
@@ -225,174 +163,98 @@
             </tbody>
         </table>
 
+        <!-- Summary -->
         <div class="summary">
-            <div class="summary-title">Ringkasan Statistik</div>
-            <div class="summary-item">
-                <span>Total Equipment:</span>
-                <span><strong>{{ $assets->sum('total_equipment') }}</strong></span>
-            </div>
-            <div class="summary-item">
-                <span>Equipment SAFE:</span>
-                <span><strong>{{ $assets->sum('safe') }}</strong></span>
-            </div>
-            <div class="summary-item">
-                <span>Equipment WARNING:</span>
-                <span><strong>{{ $assets->sum('warning') }}</strong></span>
-            </div>
-            <div class="summary-item">
-                <span>Equipment FAULT:</span>
-                <span><strong>{{ $assets->sum('fault') }}</strong></span>
-            </div>
-        </div>
-
-        <!-- CHART VISUALIZATION - Horizontal Stacked Bar Chart -->
-        @php
-            $totalSafe = $assets->sum('safe');
-            $totalWarning = $assets->sum('warning');
-            $totalFault = $assets->sum('fault');
-            $grandTotal = $totalSafe + $totalWarning + $totalFault;
-            
-            // Calculate percentages
-            $pctSafe = $grandTotal > 0 ? ($totalSafe / $grandTotal) * 100 : 0;
-            $pctWarning = $grandTotal > 0 ? ($totalWarning / $grandTotal) * 100 : 0;
-            $pctFault = $grandTotal > 0 ? ($totalFault / $grandTotal) * 100 : 0;
-        @endphp
-        
-        <div class="chart-container" style="margin: 20px 0; padding: 0 10px;">
-            <!-- Stacked Bar Chart using Table -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-                <tr style="height: 40px;">
-                    @if($pctSafe > 0)
-                    <td style="width: {{ $pctSafe }}%; background-color: #90EE90; text-align: center; vertical-align: middle; font-weight: bold; font-size: 12px; border: 1px solid #999;">
-                        {{ round($pctSafe, 1) }}%
-                    </td>
-                    @endif
-                    @if($pctWarning > 0)
-                    <td style="width: {{ $pctWarning }}%; background-color: #FFD700; text-align: center; vertical-align: middle; font-weight: bold; font-size: 12px; border: 1px solid #999;">
-                        {{ round($pctWarning, 1) }}%
-                    </td>
-                    @endif
-                    @if($pctFault > 0)
-                    <td style="width: {{ $pctFault }}%; background-color: #FF6B6B; text-align: center; vertical-align: middle; font-weight: bold; font-size: 12px; color: white; border: 1px solid #999;">
-                        {{ round($pctFault, 1) }}%
-                    </td>
-                    @endif
-                </tr>
-            </table>
-            
-            <!-- Legend -->
-            <div style="text-align: center; font-size: 10px; margin-top: 12px;">
-                <div style="display: inline-block; margin: 0 15px;">
-                    <span style="display: inline-block; width: 16px; height: 16px; background-color: #90EE90; margin-right: 6px; vertical-align: middle;"></span>
-                    <span style="vertical-align: middle;">SAFE: {{ $totalSafe }} ({{ round($pctSafe, 1) }}%)</span>
+            <div class="summary-title" style="border-bottom: 2px solid #ccc; padding-bottom:5px; margin-bottom:5px;">Ringkasan Statistik</div>
+            <div style="width: 100%; overflow: hidden;">
+                <div style="float: left; width: 48%;">
+                    <div class="summary-item">Total Equipment: <strong>{{ $assets->sum('total_equipment') }}</strong></div>
+                    <div class="summary-item">Equipment SAFE: <strong style="color:green">{{ $assets->sum('safe') }}</strong></div>
                 </div>
-                <div style="display: inline-block; margin: 0 15px;">
-                    <span style="display: inline-block; width: 16px; height: 16px; background-color: #FFD700; margin-right: 6px; vertical-align: middle;"></span>
-                    <span style="vertical-align: middle;">WARNING: {{ $totalWarning }} ({{ round($pctWarning, 1) }}%)</span>
-                </div>
-                <div style="display: inline-block; margin: 0 15px;">
-                    <span style="display: inline-block; width: 16px; height: 16px; background-color: #FF6B6B; margin-right: 6px; vertical-align: middle;"></span>
-                    <span style="vertical-align: middle;">FAULT: {{ $totalFault }} ({{ round($pctFault, 1) }}%)</span>
+                <div style="float: right; width: 48%;">
+                    <div class="summary-item">Equipment WARNING: <strong style="color:orange">{{ $assets->sum('warning') }}</strong></div>
+                    <div class="summary-item">Equipment FAULT: <strong style="color:red">{{ $assets->sum('fault') }}</strong></div>
                 </div>
             </div>
         </div>
-        {{-- <div class="no-data">
-            Tidak ada data Form Penyampaian untuk periode yang dipilih
-        </div> --}}
         @endif
-
-        {{-- <div class="footer">
-            Halaman 1 dari 3 - Form Penyampaian Asset Wellness
-        </div> --}}
     </div>
 
-    <!-- HALAMAN 2: PETA KESEHATAN UNIT -->
+    <!-- PAGE 2: PETA MESIN -->
     <div class="page">
         <div class="header-report">
             <h1>Laporan Bulanan Asset Wellness</h1>
-            <p>PT PLN NUSANTARA POWER / PLN INDONESIA POWER</p>
-            <p style="font-weight: bold; color: #0066cc;">PETA KESEHATAN UNIT PEMBANGKIT</p>
-            <div class="report-date">
-                Tanggal Pelaporan: {{ now()->format('d-m-Y') }}
-            </div>
+            <p>PETA KESEHATAN MESIN</p>
+            <div class="report-date">Tanggal Pelaporan: {{ now()->format('d-m-Y') }}</div>
         </div>
 
-        <div class="section-title">Peta Kesehatan Unit Pembangkit</div>
-
-        <div style="padding: 20px; text-align: center;">
-            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                <tr style="background-color: #f0f0f0; font-weight: bold;">
-                    <td style="padding: 12px; border: 1px solid #999; text-align: center; width: 33%;">
-                        <div style="font-size: 14px; margin-bottom: 8px;">🟢 SAFE</div>
-                        <div style="font-size: 18px; font-weight: bold; color: #228B22;">{{ $assets->sum('safe') }} Unit</div>
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #999; text-align: center; width: 33%;">
-                        <div style="font-size: 14px; margin-bottom: 8px;">🟡 WARNING</div>
-                        <div style="font-size: 18px; font-weight: bold; color: #FF8C00;">{{ $assets->sum('warning') }} Unit</div>
-                    </td>
-                    <td style="padding: 12px; border: 1px solid #999; text-align: center; width: 33%;">
-                        <div style="font-size: 14px; margin-bottom: 8px;">🔴 FAULT</div>
-                        <div style="font-size: 18px; font-weight: bold; color: #CC0000;">{{ $assets->sum('fault') }} Unit</div>
-                    </td>
-                </tr>
-            </table>
-
-            <table style="width: 100%; border-collapse: collapse; margin: 30px 0;">
-                <thead>
-                    <tr style="background-color: #333; color: white;">
-                        <th style="padding: 10px; border: 1px solid #333; font-size: 11px;">SENTRAL</th>
-                        <th style="padding: 10px; border: 1px solid #333; font-size: 11px;">UNIT</th>
-                        <th style="padding: 10px; border: 1px solid #333; font-size: 11px;">TOTAL</th>
-                        <th style="padding: 10px; border: 1px solid #333; font-size: 11px; background-color: #90EE90; color: #000;">SAFE</th>
-                        <th style="padding: 10px; border: 1px solid #333; font-size: 11px; background-color: #FFD700; color: #000;">WARNING</th>
-                        <th style="padding: 10px; border: 1px solid #333; font-size: 11px; background-color: #FF6B6B; color: white;">FAULT</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($assets->groupBy('sentral') as $sentral => $sentralAssets)
-                    <tr style="background-color: #f9f9f9; font-weight: bold;">
-                        <td colspan="6" style="padding: 8px; border: 1px solid #ddd; background-color: #e8e8e8;">{{ $sentral ?? 'N/A' }}</td>
-                    </tr>
-                    @foreach($sentralAssets as $asset)
-                    <tr>
-                        <td style="padding: 6px; border: 1px solid #ddd; font-size: 10px;"></td>
-                        <td style="padding: 6px; border: 1px solid #ddd; font-size: 10px;">{{ $asset->unit_pembangkit_common ?? '-' }}</td>
-                        <td style="padding: 6px; border: 1px solid #ddd; font-size: 10px; text-align: center;">{{ $asset->total_equipment ?? 0 }}</td>
-                        <td style="padding: 6px; border: 1px solid #ddd; font-size: 10px; text-align: center; background-color: #f0f0f0;">{{ $asset->safe ?? 0 }}</td>
-                        <td style="padding: 6px; border: 1px solid #ddd; font-size: 10px; text-align: center; background-color: #f0f0f0;">{{ $asset->warning ?? 0 }}</td>
-                        <td style="padding: 6px; border: 1px solid #ddd; font-size: 10px; text-align: center; background-color: #f0f0f0;">{{ $asset->fault ?? 0 }}</td>
-                    </tr>
-                    @endforeach
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="section-title">Peta Kesehatan Mesin</div>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="display:inline-block; background:#FFB84D; color:white; padding:5px 15px; font-weight:bold; border-radius:4px;">UP KALTIMRA</div>
         </div>
+
+        <!-- Legend -->
+        <div style="text-align:center; font-size:9px; margin-bottom:15px; border:1px solid #ddd; padding:5px; display:inline-block; width:100%;">
+            <span style="background:#4CAF50; width:10px; height:10px; display:inline-block; margin-right:3px;"></span> SAFE
+            <span style="background:#FFD700; width:10px; height:10px; display:inline-block; margin:0 3px 0 10px;"></span> WARNING
+            <span style="background:#FF6B6B; width:10px; height:10px; display:inline-block; margin:0 3px 0 10px;"></span> FAULT
+        </div>
+
+        <table class="map-table">
+            <tr>
+                @foreach($ulStructure as $ulName => $pltdGroups)
+                <td style="width: 25%; padding: 0 5px;">
+                    <div class="ul-box">
+                        <div class="ul-header">{{ $ulName }}</div>
+                        @foreach($pltdGroups as $pltdName => $machineNames)
+                            <div class="pltd-group">
+                                <div class="pltd-name">{{ $pltdName }}</div>
+                                @forelse($machineNames as $machineName)
+                                    @php
+                                        $machine = findMachinePdf($machineName, $assetLookup, $assetLookupBySilm);
+                                        $statusClass = 'machine-safe'; 
+                                        $statusIcon = '🟢';
+                                        if ($machine) {
+                                            if ($machine->fault > 0) { $statusClass = 'machine-fault'; $statusIcon='🔴'; }
+                                            elseif ($machine->warning > 0) { $statusClass = 'machine-warning'; $statusIcon='🟡'; }
+                                        }
+                                        $displayName = $machine ? ($machine->kode_mesin_silm ?: $machineName) : $machineName;
+                                    @endphp
+                                    <div class="machine-item {{ $statusClass }}">
+                                        {{ $displayName }}
+                                    </div>
+                                @empty
+                                    <div style="font-size:7px; color:#999;">-</div>
+                                @endforelse
+                            </div>
+                        @endforeach
+                    </div>
+                </td>
+                @endforeach
+            </tr>
+        </table>
     </div>
 
-    <!-- HALAMAN 3: DETAIL WARNING -->
+    <!-- PAGE 3: DETAIL WARNING -->
     <div class="page">
         <div class="header-report">
             <h1>Laporan Bulanan Asset Wellness</h1>
-            <p>PT PLN NUSANTARA POWER / PLN INDONESIA POWER</p>
-            <p style="font-weight: bold; color: #FF8C00;">ASSET WELLNESS DENGAN STATUS WARNING</p>
-            <div class="report-date">
-                Tanggal Pelaporan: {{ now()->format('d-m-Y') }}
-            </div>
+            <p style="color: #FF8C00;">ASSET WELLNESS - DETAIL WARNING</p>
         </div>
-
         <div class="section-title">Detail Warning</div>
-
+        
         @if($detailWarnings->count() > 0)
         <table>
             <thead>
                 <tr>
-                    <th style="width: 5%;">NO</th>
-                    <th style="width: 12%;">UNIT PEMBANGKIT</th>
-                    <th style="width: 12%;">TANGGAL IDENTIFIKASI</th>
-                    <th style="width: 15%;">STATUS SAAT INI</th>
-                    <th style="width: 15%;">DESKRIPSI ASET</th>
-                    <th style="width: 15%;">KONDISI ASET</th>
-                    <th style="width: 16%;">ACTION PLAN</th>
+                    <th style="width:5%">NO</th>
+                    <th>UNIT</th>
+                    <th style="width:12%">TGL IDENTIFIKASI</th>
+                    <th>STATUS</th>
+                    <th>DESKRIPSI</th>
+                    <th>KONDISI</th>
+                    <th>ACTION PLAN</th>
                 </tr>
             </thead>
             <tbody>
@@ -409,49 +271,30 @@
                 @endforeach
             </tbody>
         </table>
-
-        <div class="summary">
-            <div class="summary-title">Ringkasan Detail Warning</div>
-            <div class="summary-item">
-                <span>Total Warning Items:</span>
-                <span><strong>{{ $detailWarnings->count() }}</strong></span>
-            </div>
-        </div>
         @else
-        {{-- <div class="no-data">
-            Tidak ada data Detail Warning untuk periode yang dipilih
-        </div> --}}
+        <div class="no-data">Tidak ada data Detail Warning.</div>
         @endif
-
-        {{-- <div class="footer">
-            Halaman 2 dari 3 - Detail Asset Wellness dengan Status WARNING
-        </div> --}}
     </div>
 
-    <!-- HALAMAN 4: DETAIL FAULT -->
+    <!-- PAGE 4: DETAIL FAULT -->
     <div class="page">
         <div class="header-report">
             <h1>Laporan Bulanan Asset Wellness</h1>
-            <p>PT PLN NUSANTARA POWER / PLN INDONESIA POWER</p>
-            <p style="font-weight: bold; color: #FF0000;">ASSET WELLNESS DENGAN STATUS FAULT</p>
-            <div class="report-date">
-                Tanggal Pelaporan: {{ now()->format('d-m-Y') }}
-            </div>
+            <p style="color: #FF0000;">ASSET WELLNESS - DETAIL FAULT</p>
         </div>
-
         <div class="section-title">Detail Fault</div>
 
         @if($detailFaults->count() > 0)
         <table>
             <thead>
                 <tr>
-                    <th style="width: 5%;">NO</th>
-                    <th style="width: 12%;">UNIT PEMBANGKIT</th>
-                    <th style="width: 12%;">TANGGAL IDENTIFIKASI</th>
-                    <th style="width: 15%;">STATUS SAAT INI</th>
-                    <th style="width: 15%;">DESKRIPSI ASET</th>
-                    <th style="width: 15%;">KONDISI ASET</th>
-                    <th style="width: 16%;">ACTION PLAN</th>
+                    <th style="width:5%">NO</th>
+                    <th>UNIT</th>
+                    <th style="width:12%">TGL IDENTIFIKASI</th>
+                    <th>STATUS</th>
+                    <th>DESKRIPSI</th>
+                    <th>KONDISI</th>
+                    <th>ACTION PLAN</th>
                 </tr>
             </thead>
             <tbody>
@@ -468,129 +311,77 @@
                 @endforeach
             </tbody>
         </table>
-
-        <div class="summary">
-            <div class="summary-title">Ringkasan Detail Fault</div>
-            <div class="summary-item">
-                <span>Total Fault Items:</span>
-                <span><strong>{{ $detailFaults->count() }}</strong></span>
-            </div>
-        </div>
         @else
-        <div class="no-data">
-            Tidak ada data Detail Fault untuk periode yang dipilih
-        </div>
+        <div class="no-data">Tidak ada data Detail Fault.</div>
         @endif
+    </div>
 
-    <!-- HALAMAN 5: VISUALISASI DATA -->
+    <!-- PAGE 5: VISUALISASI DATA (NEW) -->
     <div class="page">
         <div class="header-report">
             <h1>Laporan Bulanan Asset Wellness</h1>
-            <p>PT PLN NUSANTARA POWER / PLN INDONESIA POWER</p>
-            <p style="font-weight: bold; color: #667eea;">VISUALISASI DATA STATUS EQUIPMENT</p>
-            <div class="report-date">
-                Tanggal Pelaporan: {{ now()->format('d-m-Y') }}
-            </div>
+            <p>VISUALISASI DATA</p>
         </div>
+        <div class="section-title">Visualisasi Status Equipment</div>
 
-        <div class="section-title">Visualisasi Data Status Equipment</div>
-
-        @php
-            $totalSafe = $assets->sum('safe');
-            $totalWarning = $assets->sum('warning');
-            $totalFault = $assets->sum('fault');
-            $grandTotal = $totalSafe + $totalWarning + $totalFault;
-            
-            $pctSafe = $grandTotal > 0 ? ($totalSafe / $grandTotal) * 100 : 0;
-            $pctWarning = $grandTotal > 0 ? ($totalWarning / $grandTotal) * 100 : 0;
-            $pctFault = $grandTotal > 0 ? ($totalFault / $grandTotal) * 100 : 0;
-        @endphp
-
-        <!-- Summary Statistics Cards -->
-        <div style="margin: 20px 0;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                    <td style="width: 25%; padding: 15px; border: 2px solid #90EE90; text-align: center;">
-                        <div style="font-weight: bold; color: #228B22; font-size: 12px;">🟢 EQUIPMENT SAFE</div>
-                        <div style="font-size: 16px; font-weight: bold; color: #228B22; margin: 8px 0;">{{ $totalSafe }}</div>
-                        <div style="font-size: 11px; color: #666;">{{ round($pctSafe, 2) }}%</div>
+        <!-- Stats Boxes -->
+         <div style="margin-bottom: 20px; overflow: hidden; padding: 10px;">
+            <table style="width: 100%; border: none;">
+                <tr style="background: white;">
+                    <td style="border: none; width: 33%; padding: 5px;">
+                        <div class="stat-box" style="background-color: #e8f5e9; border: 2px solid #90EE90;">
+                            <div style="font-size: 14px; font-weight: bold; color: #2e7d32; margin-bottom: 5px;">SAFE</div>
+                            <div style="font-size: 24px; font-weight: bold;">{{ $totalSafe }}</div>
+                            <div style="font-size: 10px;">Equipment</div>
+                        </div>
                     </td>
-                    <td style="width: 25%; padding: 15px; border: 2px solid #FFD700; text-align: center;">
-                        <div style="font-weight: bold; color: #FF8C00; font-size: 12px;">🟡 EQUIPMENT WARNING</div>
-                        <div style="font-size: 16px; font-weight: bold; color: #FF8C00; margin: 8px 0;">{{ $totalWarning }}</div>
-                        <div style="font-size: 11px; color: #666;">{{ round($pctWarning, 2) }}%</div>
+                    <td style="border: none; width: 33%; padding: 5px;">
+                        <div class="stat-box" style="background-color: #fffde7; border: 2px solid #FFD700;">
+                            <div style="font-size: 14px; font-weight: bold; color: #f57f17; margin-bottom: 5px;">WARNING</div>
+                            <div style="font-size: 24px; font-weight: bold;">{{ $totalWarning }}</div>
+                            <div style="font-size: 10px;">Equipment</div>
+                        </div>
                     </td>
-                    <td style="width: 25%; padding: 15px; border: 2px solid #FF6B6B; text-align: center;">
-                        <div style="font-weight: bold; color: #CC0000; font-size: 12px;">🔴 EQUIPMENT FAULT</div>
-                        <div style="font-size: 16px; font-weight: bold; color: #CC0000; margin: 8px 0;">{{ $totalFault }}</div>
-                        <div style="font-size: 11px; color: #666;">{{ round($pctFault, 2) }}%</div>
-                    </td>
-                    <td style="width: 25%; padding: 15px; border: 2px solid #667eea; text-align: center;">
-                        <div style="font-weight: bold; color: #667eea; font-size: 12px;">📈 TOTAL EQUIPMENT</div>
-                        <div style="font-size: 16px; font-weight: bold; color: #667eea; margin: 8px 0;">{{ $grandTotal }}</div>
-                        <div style="font-size: 11px; color: #666;">100%</div>
+                    <td style="border: none; width: 33%; padding: 5px;">
+                        <div class="stat-box" style="background-color: #ffebee; border: 2px solid #FF6B6B;">
+                            <div style="font-size: 14px; font-weight: bold; color: #c62828; margin-bottom: 5px;">FAULT</div>
+                            <div style="font-size: 24px; font-weight: bold;">{{ $totalFault }}</div>
+                            <div style="font-size: 10px;">Equipment</div>
+                        </div>
                     </td>
                 </tr>
             </table>
         </div>
 
-        <!-- Progress Bars -->
-        <div style="margin: 30px 0;">
-            <div style="margin-bottom: 15px;">
-                <div style="font-weight: bold; margin-bottom: 5px; font-size: 11px;">SAFE (Aman)</div>
-                <div style="background-color: #f0f0f0; height: 20px; border-radius: 4px; overflow: hidden; border: 1px solid #ddd;">
-                    <div style="background-color: #90EE90; height: 100%; width: {{ $pctSafe }}%; display: flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 10px; font-weight: bold; color: #000;">{{ round($pctSafe, 1) }}%</span>
+        <!-- Charts -->
+        <table style="width: 100%; border: none; margin-top: 10px;">
+            <tr style="background: white;">
+                <td style="border: none; width: 50%; padding: 10px; vertical-align: top;">
+                    <div class="vis-card">
+                        <div class="vis-card-title">Distribusi Status</div>
+                        <div style="text-align: center;">
+                            @if(isset($pieChartBase64) && $pieChartBase64)
+                                <img src="{{ $pieChartBase64 }}" style="width: 100%; max-width: 300px; height: auto;">
+                            @else
+                                <p style="color: #999; font-style: italic; padding: 20px;">Chart tidak dapat dimuat (Koneksi)</p>
+                            @endif
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 15px;">
-                <div style="font-weight: bold; margin-bottom: 5px; font-size: 11px;">WARNING (Perlu Perhatian)</div>
-                <div style="background-color: #f0f0f0; height: 20px; border-radius: 4px; overflow: hidden; border: 1px solid #ddd;">
-                    <div style="background-color: #FFD700; height: 100%; width: {{ $pctWarning }}%; display: flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 10px; font-weight: bold; color: #000;">{{ round($pctWarning, 1) }}%</span>
+                </td>
+                <td style="border: none; width: 50%; padding: 10px; vertical-align: top;">
+                    <div class="vis-card">
+                        <div class="vis-card-title">Tren Bulanan (Warning + Fault)</div>
+                        <div style="text-align: center;">
+                            @if(isset($barChartBase64) && $barChartBase64)
+                                <img src="{{ $barChartBase64 }}" style="width: 100%; max-width: 300px; height: auto;">
+                            @else
+                                <p style="color: #999; font-style: italic; padding: 20px;">Chart tidak dapat dimuat (Koneksi)</p>
+                            @endif
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 15px;">
-                <div style="font-weight: bold; margin-bottom: 5px; font-size: 11px;">FAULT (Rusak/Gangguan)</div>
-                <div style="background-color: #f0f0f0; height: 20px; border-radius: 4px; overflow: hidden; border: 1px solid #ddd;">
-                    <div style="background-color: #FF6B6B; height: 100%; width: {{ $pctFault }}%; display: flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 10px; font-weight: bold; color: white;">{{ round($pctFault, 1) }}%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Monthly Issues Chart -->
-        <div style="margin-top: 30px;">
-            <div style="font-weight: bold; margin-bottom: 10px; font-size: 12px;">TREN MONTHLY - WARNING + FAULT (Bulan {{ $bulanList[$bulan] ?? $bulan }}, Tahun {{ $tahun }})</div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-                <tr style="background-color: #f0f0f0; border: 1px solid #ddd;">
-                    @foreach($monthlyIssues as $month => $count)
-                    <td style="text-align: center; padding: 8px; border-right: 1px solid #ddd; border-bottom: 1px solid #ddd;">
-                        <div style="font-weight: bold;">{{ substr($month, 0, 3) }}</div>
-                        <div style="margin-top: 5px; font-size: 14px; font-weight: bold; color: #FF7B54;">{{ $count }}</div>
-                    </td>
-                    @endforeach
-                </tr>
-            </table>
-        </div>
-
-        <div class="summary" style="margin-top: 30px;">
-            <div class="summary-title">Kesimpulan</div>
-            <div style="font-size: 10px; line-height: 1.6; color: #333;">
-                Berdasarkan data yang dikumpulkan untuk bulan {{ $bulanList[$bulan] ?? $bulan }} tahun {{ $tahun }}, 
-                status kesehatan equipment secara keseluruhan menunjukkan:
-                <ul style="margin: 10px 0; padding-left: 20px;">
-                    <li>{{ $totalSafe }} unit ({{ round($pctSafe, 1) }}%) dalam kondisi SAFE</li>
-                    <li>{{ $totalWarning }} unit ({{ round($pctWarning, 1) }}%) dalam status WARNING</li>
-                    <li>{{ $totalFault }} unit ({{ round($pctFault, 1) }}%) dalam status FAULT</li>
-                </ul>
-            </div>
-        </div>
+                </td>
+            </tr>
+        </table>
     </div>
 
 </body>

@@ -145,13 +145,10 @@
                         @csrf
                         @method('PUT')
 
-                        <div class="form-group @error('kode_mesin') error @enderror">
-                            <label>Kode Mesin *</label>
-                            <input type="text" name="kode_mesin" value="{{ $assetWellness->kode_mesin }}" disabled>
+                        <div class="form-group">
+                            <label>Kode Mesin SILM *</label>
+                            <input type="text" name="kode_mesin_silm" value="{{ $assetWellness->kode_mesin_silm }}" disabled>
                             <div class="readonly-note">Tidak dapat diubah</div>
-                            @error('kode_mesin')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
                         </div>
 
                         <div class="form-group @error('unit_pembangkit_common') error @enderror">
@@ -168,9 +165,15 @@
                                 <input type="text" name="tipe_aset" value="{{ $assetWellness->tipe_aset }}">
                             </div>
                             <div class="form-group">
-                                <label>Kode Mesin SILM</label>
-                                <input type="text" name="kode_mesin_silm" value="{{ $assetWellness->kode_mesin_silm }}">
+                                <label>Kode Mesin (Short)</label>
+                                <input type="text" name="kode_mesin" value="{{ $assetWellness->kode_mesin }}" disabled>
+                                <div class="readonly-note">Primary Key</div>
                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Inisial Mesin (untuk Peta)</label>
+                            <input type="text" name="inisial_mesin" value="{{ $assetWellness->inisial_mesin }}">
                         </div>
 
                         <div class="form-row">

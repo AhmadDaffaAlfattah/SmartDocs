@@ -29,6 +29,7 @@ class AssetWellness extends Model
         'tahun',
         'bulan',
         'sentral',
-        'keterangan'
+        'keterangan',
+        'inisial_mesin'
     ];
 }

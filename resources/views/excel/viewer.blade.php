@@ -1,133 +1,18 @@
-@extends('layouts.app')
+@extends('layouts.master')
 
-@section('content')
-<div class="excel-viewer-container">
-    <!-- Header -->
-    <div class="excel-header">
-        <div class="header-content">
-            <a href="{{ route('excel.index') }}" class="back-btn">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
-            <div class="header-info">
-                <h2> {{ $excelUpload->original_name }}</h2>
-                <p class="text-muted">{{ $excelUpload->total_sheets }} sheet{{ $excelUpload->total_sheets > 1 ? 's' : '' }} • Uploaded {{ $excelUpload->created_at->diffForHumans() }}</p>
-            </div>
-            <div class="header-actions">
-                <a href="{{ route('excel.download', $excelUpload->id) }}" class="btn btn-info">
-                    <i class="fas fa-download"></i> Download
-                </a>
-                <form action="{{ route('excel.destroy', $excelUpload->id) }}" method="POST" class="d-inline" 
-                      onsubmit="return confirm('Delete this file?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
+@section('title', 'SmartDocs - Excel Viewer')
 
-    <div class="excel-wrapper">
-        <!-- Navbar Sheet (Sidebar) -->
-        <nav class="excel-navbar">
-            <h5 class="navbar-title">📄 Sheets</h5>
-            <div class="navbar-items">
-                @foreach($sheets as $sheet)
-                    <a href="{{ route('excel.view', ['excelUpload' => $excelUpload->id, 'sheet' => $sheet->sheet_name]) }}" 
-                       class="navbar-item {{ $selectedSheet->id === $sheet->id ? 'active' : '' }}"
-                       title="{{ $sheet->sheet_name }}">
-                        <span class="sheet-icon">📋</span>
-                        <span class="sheet-name">{{ $sheet->sheet_name }}</span>
-                    </a>
-                @endforeach
-            </div>
-        </nav>
-
-        <!-- Main Content -->
-        <div class="excel-content">
-            <div class="sheet-header">
-                <h3>{{ $selectedSheet->sheet_name }}</h3>
-                <p class="sheet-info">Sheet {{ $selectedSheet->sheet_index + 1 }} of {{ $excelUpload->total_sheets }}</p>
-            </div>
-
-            <!-- Tabel Data -->
-            <div class="table-wrapper">
-                @php
-                    // Validasi data
-                    $isValidData = is_array($sheetData) && count($sheetData) > 0;
-                    
-                    if ($isValidData) {
-                        // Ambil header dari baris pertama
-                        $headerRow = reset($sheetData);
-                        $headerRow = is_array($headerRow) ? $headerRow : [];
-                        
-                        // Ambil data rows (skip header)
-                        $dataRows = count($sheetData) > 1 ? array_slice($sheetData, 1) : [];
-                        
-                        // Hitung jumlah kolom
-                        $maxCols = max(array_map(function($row) {
-                            return is_array($row) ? count($row) : 0;
-                        }, array_merge([$headerRow], $dataRows)));
-                    }
-                @endphp
-
-                @if($isValidData && count($headerRow) > 0)
-                    <table class="excel-table">
-                        <thead>
-                            <tr>
-                                @foreach($headerRow as $header)
-                                    @if(!empty($header))
-                                        <th>{{ $header }}</th>
-                                    @else
-                                        <th style="opacity: 0.5;">-</th>
-                                    @endif
-                                @endforeach
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if(count($dataRows) > 0)
-                                @foreach($dataRows as $row)
-                                    <tr>
-                                        @if(is_array($row))
-                                            @foreach($row as $cell)
-                                                <td>{{ !empty($cell) ? $cell : '-' }}</td>
-                                            @endforeach
-                                        @endif
-                                    </tr>
-                                @endforeach
-                            @else
-                                <tr>
-                                    <td colspan="{{ count($headerRow) }}" class="text-center text-muted py-4">
-                                        📊 No data available in this sheet
-                                    </td>
-                                </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                @else
-                    <div class="alert alert-warning" role="alert">
-                        ⚠️ This sheet appears to be empty or invalid
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-</div>
-
+@push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
     .excel-viewer-container {
         width: 100%;
-        height: 100vh;
+        height: 100%;
         display: flex;
         flex-direction: column;
         background: #f5f5f5;
+        border-radius: 8px;
+        overflow: hidden;
     }
 
     /* Header */
@@ -172,11 +57,13 @@
         margin-bottom: 0.25rem;
         font-size: 1.75rem;
         font-weight: 600;
+        color: white;
     }
 
     .header-info p {
         font-size: 0.9rem;
         opacity: 0.9;
+        color: rgba(255,255,255,0.9);
     }
 
     .header-actions {
@@ -192,6 +79,10 @@
         font-weight: 500;
         cursor: pointer;
         transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
     }
 
     .header-actions .btn-info {
@@ -220,6 +111,7 @@
         max-width: 1400px;
         width: 100%;
         margin: 0 auto;
+        border-top: 1px solid #e0e0e0;
     }
 
     /* Navbar */
@@ -439,6 +331,120 @@
         }
     }
 </style>
+@endpush
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+@section('content')
+<div class="excel-viewer-container">
+    <!-- Header -->
+    <div class="excel-header">
+        <div class="header-content">
+            <a href="{{ route('excel.index') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <div class="header-info">
+                <h2> {{ $excelUpload->original_name }}</h2>
+                <p>{{ $excelUpload->total_sheets }} sheet{{ $excelUpload->total_sheets > 1 ? 's' : '' }} • Uploaded {{ $excelUpload->created_at->diffForHumans() }}</p>
+            </div>
+            <div class="header-actions">
+                <a href="{{ route('excel.download', $excelUpload->id) }}" class="btn btn-info">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <form action="{{ route('excel.destroy', $excelUpload->id) }}" method="POST" class="d-inline" 
+                      onsubmit="return confirm('Delete this file?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="excel-wrapper">
+        <!-- Navbar Sheet (Sidebar) -->
+        <nav class="excel-navbar">
+            <h5 class="navbar-title">📄 Sheets</h5>
+            <div class="navbar-items">
+                @foreach($sheets as $sheet)
+                    <a href="{{ route('excel.view', ['excelUpload' => $excelUpload->id, 'sheet' => $sheet->sheet_name]) }}" 
+                       class="navbar-item {{ $selectedSheet->id === $sheet->id ? 'active' : '' }}"
+                       title="{{ $sheet->sheet_name }}">
+                        <span class="sheet-icon">📋</span>
+                        <span class="sheet-name">{{ $sheet->sheet_name }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="excel-content">
+            <div class="sheet-header">
+                <h3>{{ $selectedSheet->sheet_name }}</h3>
+                <p class="sheet-info">Sheet {{ $selectedSheet->sheet_index + 1 }} of {{ $excelUpload->total_sheets }}</p>
+            </div>
+
+            <!-- Tabel Data -->
+            <div class="table-wrapper">
+                @php
+                    // Validasi data
+                    $isValidData = is_array($sheetData) && count($sheetData) > 0;
+                    
+                    if ($isValidData) {
+                        // Ambil header dari baris pertama
+                        $headerRow = reset($sheetData);
+                        $headerRow = is_array($headerRow) ? $headerRow : [];
+                        
+                        // Ambil data rows (skip header)
+                        $dataRows = count($sheetData) > 1 ? array_slice($sheetData, 1) : [];
+                        
+                        // Hitung jumlah kolom
+                        $maxCols = max(array_map(function($row) {
+                            return is_array($row) ? count($row) : 0;
+                        }, array_merge([$headerRow], $dataRows)));
+                    }
+                @endphp
+
+                @if($isValidData && count($headerRow) > 0)
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                @foreach($headerRow as $header)
+                                    @if(!empty($header))
+                                        <th>{{ $header }}</th>
+                                    @else
+                                        <th style="opacity: 0.5;">-</th>
+                                    @endif
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if(count($dataRows) > 0)
+                                @foreach($dataRows as $row)
+                                    <tr>
+                                        @if(is_array($row))
+                                            @foreach($row as $cell)
+                                                <td>{{ !empty($cell) ? $cell : '-' }}</td>
+                                            @endforeach
+                                        @endif
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="{{ count($headerRow) }}" class="text-center text-muted py-4">
+                                        📊 No data available in this sheet
+                                    </td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                @else
+                    <div class="alert alert-warning" role="alert">
+                        ⚠️ This sheet appears to be empty or invalid
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
