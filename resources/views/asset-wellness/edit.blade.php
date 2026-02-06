@@ -138,7 +138,7 @@
             <div class="landing-main">
                 <div class="form-container">
                     <div class="form-header">
-                        <h1>✏️ Edit Data Mesin</h1>
+                        <h1> Edit Data Mesin</h1>
                     </div>
 
                     <form action="{{ route('asset-wellness.update', $assetWellness->id) }}" method="POST">

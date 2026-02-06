@@ -137,7 +137,7 @@
                                     <button class="action-btn edit" title="Edit" onclick="openEditModal({{ $document->id }})">
                                         <img src="https://cdn-icons-png.flaticon.com/128/14034/14034493.png" alt="Edit" width="32" height="32">
                                     </button>
-                                    <form action="{{ route('pemeliharaan.destroy', $document->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus dokumen ini?');">
+                                    <form id="delete-form-{{ $document->id }}" action="{{ route('pemeliharaan.destroy', $document->id) }}" method="POST" style="display: inline;" onsubmit="event.preventDefault(); confirmDelete('delete-form-{{ $document->id }}');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="action-btn delete" title="Delete" style="border: none; background: none; cursor: pointer;">

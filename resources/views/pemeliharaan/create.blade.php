@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>SmartDocs - Tambah Dokumen</title>
+    <title>SmartDocs - Tambah Dokumen Pemeliharaan</title>
     <link rel="icon" href="{{ asset('images/smartdocs2.png') }}" type="image/png">
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
     <link rel="stylesheet" href="{{ asset('css/engineering.css') }}">
@@ -35,7 +35,7 @@
                             <span class="profile-item-icon">🔑</span>
                             <span class="profile-item-text">Change Password</span>
                         </a>
-                        <a href="{{ route('logout') }}" class="profile-item" onclick="event.stopPropagation(); event.preventDefault(); document.getElementById('logout-form').submit();">
+                        <a href="{{ route('logout') }}" class="profile-item" onclick="handleLogout(event)">
                             <span class="profile-item-icon">🚪</span>
                             <span class="profile-item-text">Logout</span>
                         </a>
@@ -60,11 +60,11 @@
                     </div>
                     <div class="submenu" id="submenu-document">
                         <div class="submenu-item" onclick="window.location.href='{{ route('engineering.index') }}'">▸ Engineering</div>
-                        <div class="submenu-item" onclick="navigateToBidang('Operasi')">▸ Operasi</div>
-                        <div class="submenu-item" onclick="navigateToBidang('Pemeliharaan')">▸ Pemeliharaan</div>
-                        <div class="submenu-item" onclick="navigateToBidang('Business Support')">▸ Business Support</div>
-                        <div class="submenu-item" onclick="navigateToBidang('Keamanan')">▸ Keamanan</div>
-                        <div class="submenu-item" onclick="navigateToBidang('Lingkungan')">▸ Lingkungan</div>
+                        <div class="submenu-item" onclick="window.location.href='{{ route('operasi.index') }}'">▸ Operasi</div>
+                        <div class="submenu-item" onclick="window.location.href='{{ route('pemeliharaan.index') }}'">▸ Pemeliharaan</div>
+                        <div class="submenu-item" onclick="window.location.href='{{ route('business-support.index') }}'">▸ Business Support</div>
+                        <div class="submenu-item" onclick="window.location.href='{{ route('keamanan.index') }}'">▸ Keamanan</div>
+                        <div class="submenu-item" onclick="window.location.href='{{ route('lingkungan.index') }}'">▸ Lingkungan</div>
                     </div>
 
                     <div class="sidebar-item" onclick="window.location.href='{{ route('folder.index') }}'"> Folder</div>
@@ -77,11 +77,11 @@
 
             <!-- Main Content -->
             <div class="landing-main">
-                <!-- Engineering Header -->
+                <!-- Header -->
                 <div class="engineering-page-header">
                     <div class="engineering-page-title">
                         <div style="font-size: 28px; font-weight: bold; color: #333;">
-                            Document <span style="font-weight: bold;">» Tambah Dokumen</span>
+                            Pemeliharaan <span style="font-weight: bold;">» Tambah Dokumen</span>
                         </div>
                     </div>
                 </div>
@@ -258,6 +258,8 @@
         }
     </style>
 
+
+    
     <script>
         // Render folder tree untuk create page
         const folderTreeData = {!! json_encode($folderTree) !!};
@@ -340,6 +342,17 @@
                 const submenu = document.getElementById('submenu-document');
                 submenu.style.display = submenu.style.display === 'none' ? 'block' : 'none';
             });
+        }
+        
+        // Logout Handler with Validation
+        window.handleLogout = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Show confirmation dialog
+            if (confirm('Apakah Anda yakin ingin keluar?')) {
+                document.getElementById('logout-form').submit();
+            }
         }
     </script>
 </body>

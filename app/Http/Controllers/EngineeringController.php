@@ -13,6 +13,43 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 class EngineeringController extends Controller
 {
     /**
+     * Helper to get filtered folders based on user role
+     */
+    private function getFilteredFolders()
+    {
+        $user = auth()->user();
+        $role = strtolower($user->role ?? '');
+        $bidang = strtolower($user->bidang ?? '');
+
+        $query = Folder::whereNull('parent_id')->orderBy('urutan');
+
+        if ($role !== 'super_admin' && $role !== 'super admin') {
+            $allowedFolder = null;
+            if (str_contains($bidang, 'engineering')) {
+                $allowedFolder = 'Engineering';
+            } elseif (str_contains($bidang, 'operasi')) {
+                $allowedFolder = 'Operasi';
+            } elseif (str_contains($bidang, 'business support') || str_contains($bidang, 'bussiness support')) {
+                $allowedFolder = 'Business Support';
+            } elseif (str_contains($bidang, 'keamanan')) {
+                $allowedFolder = 'Keamanan';
+            } elseif (str_contains($bidang, 'lingkungan')) {
+                $allowedFolder = 'Lingkungan';
+            } elseif (str_contains($bidang, 'pemeliharaan')) {
+                $allowedFolder = 'Pemeliharaan';
+            }
+
+            if ($allowedFolder) {
+                $query->where('nama_folder', 'like', "%$allowedFolder%");
+            } else {
+                $query->where('id', -1); // Block access if no valid bidang
+            }
+        }
+
+        return $query->with('children.children.children.children.children')->get();
+    }
+
+    /**
      * Display a listing of engineering documents
      */
     public function index(Request $request)
@@ -34,7 +71,7 @@ class EngineeringController extends Controller
         $documents = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         $folders = EngineeringDocument::getFolders();
-        $folderTree = Folder::getRootFolders();
+        $folderTree = $this->getFilteredFolders();
 
         return view('engineering.index', [
             'documents' => $documents,
@@ -52,7 +89,7 @@ class EngineeringController extends Controller
     public function create()
     {
         $folders = EngineeringDocument::getFolders();
-        $folderTree = Folder::getRootFolders();
+        $folderTree = $this->getFilteredFolders();
         return view('engineering.create', ['folders' => $folders, 'folderTree' => $folderTree]);
     }
 
@@ -69,6 +106,41 @@ class EngineeringController extends Controller
             'link' => 'nullable|url',
         ]);
 
+        // Security Check: Validate Folder Access
+        $folderRecord = Folder::find($validated['folder_id']);
+        if (!$folderRecord) {
+             return back()->withErrors(['folder_id' => 'Folder tidak valid.']);
+        }
+
+        $user = auth()->user();
+        $role = strtolower($user->role ?? '');
+        $bidang = strtolower($user->bidang ?? '');
+
+        if ($role !== 'super_admin' && $role !== 'super admin') {
+            // Check if folder is allowed
+            // We check if the chosen folder OR its root matches the Bidang
+            // Since we don't have easy recursive parent check, we rely on the fact that 
+            // the user could only select from getFilteredFolders() in the UI.
+            // But for backend safety, we should maintain strictness.
+            // Assuming the folder structure is strict (Root -> Sub).
+            // Let's check if the ROOT folder of this ID matches.
+            
+            // Hacky but safe for now: Check if filtered tree contains this ID?
+            // Expensive.
+            // Simpler: Check if folder name or known parents match.
+            // If the folder is "SOP Engineering", it matches.
+            
+            // Let's assume the UI restriction is primary, and we add a basic name check if possible.
+            // Or we re-fetch the allowed tree and check if ID exists in it.
+            
+            $allowedTree = $this->getFilteredFolders(); // This returns Collections
+            $allowedIds = $this->getAllIdsFromTree($allowedTree);
+            
+            if (!in_array($validated['folder_id'], $allowedIds)) {
+                return back()->withErrors(['folder_id' => 'Anda tidak memiliki hak akses untuk folder ini.']);
+            }
+        }
+
         // Ensure either file or link is provided
         if (!$request->hasFile('file') && empty($validated['link'])) {
             return back()->withErrors(['file' => 'Silakan upload file atau masukkan link!']);
@@ -78,12 +150,7 @@ class EngineeringController extends Controller
         $document->judul = $validated['judul'];
         $document->folder_id = $validated['folder_id'];
         $document->tanggal_upload = now();
-
-        // Get folder name from folder_id
-        $folderRecord = Folder::find($validated['folder_id']);
-        if ($folderRecord) {
-            $document->folder = $folderRecord->nama_folder;
-        }
+        $document->folder = $folderRecord->nama_folder;
 
         // Handle file upload
         if ($request->hasFile('file')) {
@@ -107,6 +174,18 @@ class EngineeringController extends Controller
         return redirect()->route('engineering.index')
             ->with('success', 'Dokumen berhasil ditambahkan!');
     }
+    
+    // Helper to extract IDs
+    private function getAllIdsFromTree($nodes) {
+        $ids = [];
+        foreach($nodes as $node) {
+            $ids[] = $node->id;
+            if ($node->children) {
+                $ids = array_merge($ids, $this->getAllIdsFromTree($node->children));
+            }
+        }
+        return $ids;
+    }
 
     /**
      * Show the form for editing the specified document
@@ -115,7 +194,7 @@ class EngineeringController extends Controller
     {
         $document = EngineeringDocument::findOrFail($id);
         $folders = EngineeringDocument::getFolders();
-        $folderTree = Folder::getRootFolders();
+        $folderTree = $this->getFilteredFolders();
 
         return view('engineering.edit', [
             'document' => $document,
@@ -130,7 +209,7 @@ class EngineeringController extends Controller
     public function getEditData($id)
     {
         $document = EngineeringDocument::findOrFail($id);
-        $folderTree = Folder::getRootFolders();
+        $folderTree = $this->getFilteredFolders();
 
         return response()->json([
             'document' => $document,
@@ -153,14 +232,29 @@ class EngineeringController extends Controller
             'link' => 'nullable|url',
         ]);
 
+        // Security Check: Validate Folder Access
+        $folderRecord = Folder::find($validated['folder_id']);
+        if (!$folderRecord) {
+             return back()->withErrors(['folder_id' => 'Folder tidak valid.']);
+        }
+
+        $user = auth()->user();
+        $role = strtolower($user->role ?? '');
+        
+        if ($role !== 'super_admin' && $role !== 'super admin') {
+            $allowedTree = $this->getFilteredFolders(); 
+            $allowedIds = $this->getAllIdsFromTree($allowedTree);
+            
+            if (!in_array($validated['folder_id'], $allowedIds)) {
+                return back()->withErrors(['folder_id' => 'Anda tidak memiliki hak akses untuk folder ini.']);
+            }
+        }
+
         $document->judul = $validated['judul'];
         $document->folder_id = $validated['folder_id'];
 
         // Get folder name from folder_id
-        $folderRecord = Folder::find($validated['folder_id']);
-        if ($folderRecord) {
-            $document->folder = $folderRecord->nama_folder;
-        }
+        $document->folder = $folderRecord->nama_folder;
 
         // Handle file upload
         if ($request->hasFile('file')) {

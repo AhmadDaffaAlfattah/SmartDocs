@@ -10,6 +10,43 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class OperasiController extends Controller
 {
+    /**
+     * Helper to get filtered folders based on user role
+     */
+    private function getFilteredFolders()
+    {
+        $user = auth()->user();
+        $role = strtolower($user->role ?? '');
+        $bidang = strtolower($user->bidang ?? '');
+
+        $query = Folder::whereNull('parent_id')->orderBy('urutan');
+
+        if ($role !== 'super_admin' && $role !== 'super admin') {
+            $allowedFolder = null;
+            if (str_contains($bidang, 'engineering')) {
+                $allowedFolder = 'Engineering';
+            } elseif (str_contains($bidang, 'operasi')) {
+                $allowedFolder = 'Operasi';
+            } elseif (str_contains($bidang, 'business support') || str_contains($bidang, 'bussiness support')) {
+                $allowedFolder = 'Business Support';
+            } elseif (str_contains($bidang, 'keamanan')) {
+                $allowedFolder = 'Keamanan';
+            } elseif (str_contains($bidang, 'lingkungan')) {
+                $allowedFolder = 'Lingkungan';
+            } elseif (str_contains($bidang, 'pemeliharaan')) {
+                $allowedFolder = 'Pemeliharaan';
+            }
+
+            if ($allowedFolder) {
+                $query->where('nama_folder', 'like', "%$allowedFolder%");
+            } else {
+                $query->where('id', -1); // Block access if no valid bidang
+            }
+        }
+
+        return $query->with('children.children.children.children.children')->get();
+    }
+
     public function index(Request $request)
     {
         $query = OperasiDocument::query();
@@ -26,7 +63,7 @@ class OperasiController extends Controller
         $documents = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         $folders = OperasiDocument::getFolders();
-        $folderTree = Folder::getRootFolders();
+        $folderTree = $this->getFilteredFolders();
 
         return view('operasi.index', [
             'documents' => $documents,
@@ -41,7 +78,7 @@ class OperasiController extends Controller
     public function create()
     {
         $folders = OperasiDocument::getFolders();
-        $folderTree = Folder::getRootFolders();
+        $folderTree = $this->getFilteredFolders();
         return view('operasi.create', ['folders' => $folders, 'folderTree' => $folderTree]);
     }
 
@@ -93,7 +130,7 @@ class OperasiController extends Controller
     {
         $document = OperasiDocument::findOrFail($id);
         $folders = OperasiDocument::getFolders();
-        $folderTree = Folder::getRootFolders();
+        $folderTree = $this->getFilteredFolders();
 
         return view('operasi.edit', [
             'document' => $document,
@@ -105,7 +142,7 @@ class OperasiController extends Controller
     public function getEditData($id)
     {
         $document = OperasiDocument::findOrFail($id);
-        $folderTree = Folder::getRootFolders();
+        $folderTree = $this->getFilteredFolders();
 
         return response()->json([
             'document' => $document,

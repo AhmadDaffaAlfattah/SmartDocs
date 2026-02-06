@@ -7,15 +7,27 @@
 @endpush
 
 @section('content')
+@section('content')
+    @php
+        $user = Auth::user();
+        $isSuperAdmin = $user->role === 'super_admin' || $user->role === 'super admin';
+        $isAdmin = $user->role === 'admin';
+        // Since the controller already filters the folders to only show what the user owns,
+        // we can allow any 'admin' to see the management buttons for the folders they see.
+        $canManageFolders = $isSuperAdmin || $isAdmin;
+    @endphp
+
     <!-- Header -->
     <div class="engineering-page-header">
         <div class="engineering-page-title">
             <div style="font-size: 28px; font-weight: bold; color: #333333; margin-bottom: 20px;">
                 Folder
             </div>
+            @if($canManageFolders)
             <a href="{{ route('folder.create') }}" class="btn-tambah-data">
                 ➕ Tambah Folder
             </a>
+            @endif
         </div>
     </div>
 
@@ -40,12 +52,16 @@
     <div class="folder-tree-container">
         @if($folders->isEmpty())
             <div class="empty-state">
-                <p>📁 Belum ada folder. <a href="{{ route('folder.create') }}">Buat folder pertama Anda</a></p>
+                <p>📁 Belum ada folder. 
+                @if($canManageFolders)
+                    <a href="{{ route('folder.create') }}">Buat folder pertama Anda</a>
+                @endif
+                </p>
             </div>
         @else
             <div class="folder-tree">
                 @foreach($folders as $folder)
-                    @include('components.folder-tree-display', ['folder' => $folder, 'level' => 0])
+                    @include('components.folder-tree-display', ['folder' => $folder, 'level' => 0, 'canManageFolders' => $canManageFolders])
                 @endforeach
             </div>
         @endif
@@ -80,41 +96,47 @@
                 confirmMessage = 'Folder ini memiliki subfolder. Yakin ingin menghapus folder dan semua subfolder?';
             }
             
-            if (confirm(confirmMessage)) {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-                
-                fetch(`/folder/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error('Delete failed');
-                    }
-                })
-                .then(data => {
-                    if (data.success) {
-                        // Show success message
-                        alert(data.message);
-                        // Fade out and reload
-                        folderItem.style.opacity = '0';
-                        folderItem.style.transition = 'opacity 0.3s ease';
-                        setTimeout(() => {
-                            location.reload();
-                        }, 300);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Gagal menghapus folder! Silakan coba lagi.');
-                });
-            }
+            showConfirmModal({
+                title: 'Hapus Folder',
+                message: confirmMessage,
+                type: 'danger',
+                confirmText: 'Ya, Hapus',
+                onConfirm: () => {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+                    
+                    fetch(`/folder/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('Delete failed');
+                        }
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            // alert(data.message); // removed alert for smoother UX or use toast if available
+                            // Fade out and reload
+                            folderItem.style.opacity = '0';
+                            folderItem.style.transition = 'opacity 0.3s ease';
+                            setTimeout(() => {
+                                location.reload();
+                            }, 300);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Gagal menghapus folder! Silakan coba lagi.');
+                    });
+                }
+            });
         }
     </script>
 @endpush

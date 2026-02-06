@@ -163,7 +163,9 @@
                             <th style="width: 20%;">Password</th>
                             <th style="width: 20%;">Bidang</th>
                             <th style="width: 15%;">Role</th>
+                            @if(auth()->user()->role !== 'user')
                             <th style="width: 15%;">Action</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -179,18 +181,20 @@
                                     </span>
                                 </td>
                                 <td class="action">
+                                    @if(auth()->user()->role !== 'user')
                                     <button class="action-btn edit" title="Edit" onclick="openEditModal({{ $account->id }})">
                                         <img src="https://cdn-icons-png.flaticon.com/128/14034/14034493.png" alt="Edit" width="32" height="32">
                                     </button>
-                                    <form action="{{ route('account.destroy', $account->id) }}" method="POST" 
+                                    <form id="delete-form-{{ $account->id }}" action="{{ route('account.destroy', $account->id) }}" method="POST" 
                                           style="display: inline;"
-                                          onsubmit="return confirm('Yakin ingin menghapus akun ini?');">
+                                          onsubmit="event.preventDefault(); confirmDelete('delete-form-{{ $account->id }}');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="action-btn delete" title="Delete" style="border: none; background: none; cursor: pointer;">
                                             <img src="https://cdn-icons-png.flaticon.com/128/4980/4980658.png" loading="lazy" alt="Delete" width="32" height="32">
                                         </button>
                                     </form>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -228,7 +232,7 @@
 
                 <div class="form-row">
                     <label for="addPassword">Password</label>
-                    <input type="text" id="addPassword" name="password" placeholder="" required>
+                    <input type="password" id="addPassword" name="password" placeholder="" required>
                 </div>
 
                 <div class="form-row">
@@ -279,7 +283,7 @@
 
                 <div class="form-row">
                     <label for="editPassword">Password</label>
-                    <input type="text" id="editPassword" name="password" placeholder="">
+                    <input type="password" id="editPassword" name="password" placeholder="Kosongkan jika tidak ingin mengubah">
                 </div>
 
                 <div class="form-row">
@@ -335,7 +339,8 @@
                     document.getElementById('editEmail').value = data.email;
                     document.getElementById('editBidang').value = data.bidang;
                     document.getElementById('editRole').value = data.role;
-                    document.getElementById('editPassword').value = data.password; // Populate password
+                    document.getElementById('editRole').value = data.role;
+                    document.getElementById('editPassword').value = ''; // Ensure password field is empty
                     
                     const form = document.getElementById('editForm');
                     const updateUrl = "{{ route('account.update', ':id') }}".replace(':id', accountId);

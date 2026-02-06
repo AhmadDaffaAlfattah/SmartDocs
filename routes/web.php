@@ -55,7 +55,10 @@ Route::middleware('auth')->group(function () {
         ]);
 
         $user = Auth::user();
-        if (!Hash::check($request->current_password, $user->password)) {
+        
+        // Fix: Application uses plain-text passwords (based on AuthController logic)
+        // So we compare directly instead of using Hash::check
+        if ($request->current_password !== $user->password) {
             return back()->withErrors(['current_password' => 'Password lama tidak sesuai']);
         }
 
@@ -196,7 +199,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('folder')->group(function () {
         Route::get('/', [FolderController::class, 'index'])->name('folder.index');
         Route::get('/tree', [FolderController::class, 'tree'])->name('folder.tree');
-        Route::middleware(\App\Http\Middleware\CheckRole::class . ':super_admin')->group(function () {
+        Route::middleware(\App\Http\Middleware\CheckRole::class . ':super_admin,admin')->group(function () {
             Route::get('/create', [FolderController::class, 'create'])->name('folder.create');
             Route::post('/', [FolderController::class, 'store'])->name('folder.store');
             Route::get('/{id}/edit', [FolderController::class, 'edit'])->name('folder.edit');

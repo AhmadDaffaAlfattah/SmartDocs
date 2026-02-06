@@ -120,7 +120,7 @@
                                         <a href="{{ route('operasi.edit', $document->id) }}" class="action-btn" title="Edit">
                                             <img src="https://cdn-icons-png.flaticon.com/128/14034/14034493.png" alt="Edit" width="24" height="24">
                                         </a>
-                                        <form action="{{ route('operasi.destroy', $document->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus dokumen ini?');">
+                                        <form id="delete-form-{{ $document->id }}" action="{{ route('operasi.destroy', $document->id) }}" method="POST" style="display: inline;" onsubmit="event.preventDefault(); confirmDelete('delete-form-{{ $document->id }}');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="action-btn" title="Delete">

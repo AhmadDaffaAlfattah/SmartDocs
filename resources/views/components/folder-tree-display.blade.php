@@ -12,6 +12,7 @@
         <span class="folder-name">{{ $folder->nama_folder }}</span>
 
         <!-- Action Buttons -->
+        @if(isset($canManageFolders) && $canManageFolders)
         <div class="folder-actions">
             <a href="{{ route('folder.create', ['parent_id' => $folder->id]) }}" class="btn-action" title="Tambah Subfolder">
                 <img src="https://cdn-icons-png.flaticon.com/128/11607/11607148.png" alt="Plus" width="18" height="18">
@@ -23,13 +24,14 @@
                 <img src="https://cdn-icons-png.flaticon.com/128/4980/4980658.png" alt="Delete" width="18" height="18">
             </button>
         </div>
+        @endif
     </div>
 
     <!-- Children Folders -->
     @if($folder->children->count() > 0)
         <div class="folder-children">
             @foreach($folder->children as $child)
-                @include('components.folder-tree-display', ['folder' => $child, 'level' => $level + 1])
+                @include('components.folder-tree-display', ['folder' => $child, 'level' => $level + 1, 'canManageFolders' => $canManageFolders ?? false])
             @endforeach
         </div>
     @endif

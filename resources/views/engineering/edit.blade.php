@@ -35,7 +35,7 @@
                             <span class="profile-item-icon">🔑</span>
                             <span class="profile-item-text">Change Password</span>
                         </a>
-                        <a href="{{ route('logout') }}" class="profile-item" onclick="event.stopPropagation(); event.preventDefault(); document.getElementById('logout-form').submit();">
+                        <a href="{{ route('logout') }}" class="profile-item" onclick="handleLogout(event)">
                             <span class="profile-item-icon">🚪</span>
                             <span class="profile-item-text">Logout</span>
                         </a>
@@ -260,6 +260,8 @@
         }
     </style>
 
+
+    
     <script>
         function navigateToBidang(bidang) {
             // Redirect ke engineering page dengan bidang sebagai filter
@@ -297,6 +299,17 @@
                 const submenu = document.getElementById('submenu-document');
                 submenu.style.display = submenu.style.display === 'none' ? 'block' : 'none';
             });
+        }
+        
+        // Logout Handler with Validation
+        window.handleLogout = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Show confirmation dialog
+            if (confirm('Apakah Anda yakin ingin keluar?')) {
+                document.getElementById('logout-form').submit();
+            }
         }
     </script>
 </body>

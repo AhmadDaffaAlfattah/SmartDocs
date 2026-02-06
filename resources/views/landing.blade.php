@@ -14,6 +14,7 @@
     </div>
 
     <!-- Stats Section -->
+    @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'super admin')
     <div class="stats-container">
         <div class="stat-card">
             <div class="stat-icon">
@@ -43,6 +44,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Kalender Section -->
     <div class="calendar-section-landing" style="display: flex; gap: 20px; flex-wrap: wrap;">

@@ -88,7 +88,8 @@ class AssetWellnessController extends Controller
             'bulan' => 'required',
             'sentral' => 'nullable',
             'keterangan' => 'nullable',
-            'inisial_mesin' => 'nullable'
+            'inisial_mesin' => 'nullable',
+            'ul' => 'nullable'
         ]);
 
         AssetWellness::create($validated);
@@ -121,7 +122,8 @@ class AssetWellnessController extends Controller
             'daya_terpasang' => 'nullable',
             'daya_mampu_netto' => 'nullable',
             'daya_mampu_pasok' => 'nullable',
-            'status_operasi' => 'nullable'
+            'status_operasi' => 'nullable',
+            'ul' => 'nullable'
         ]);
 
         $assetWellness->update($validated);
@@ -627,19 +629,29 @@ class AssetWellnessController extends Controller
                 return (float) preg_replace('/[^0-9.\-]/', '', (string)$val); 
             };
 
+            // 3. DETECT OPTIONAL COLUMNS (e.g. Inisial Mesin)
+            $headerRow = $rows[12] ?? [];
+            $inisialColIndex = null;
+            
+            foreach ($headerRow as $idx => $val) {
+                if (is_string($val) && (stripos($val, 'INISIAL') !== false)) {
+                    $inisialColIndex = $idx;
+                    break;
+                }
+            }
+
             for ($i = 13; $i < count($rows); $i++) {
                 $row = $rows[$i];
                 
                 // Mandatory KODE MESIN (Col D / Index 4)
                 $kodeMesin = isset($row[4]) ? trim($row[4]) : null;
-                // If empty, careful not to read trash.
                 if (empty($kodeMesin) || strlen($kodeMesin) < 2) continue;
 
                 // Status & Notes (Shifted to 18/19)
                 $rawStatus = $row[18] ?? null;
                 $rawKet = $row[19] ?? null;
 
-                // Synthetic Status Logic (Fixing broken Excel formulas)
+                // Synthetic Status Logic
                 $status = 'Normal';
                 $ket = '-';
                 
@@ -649,15 +661,13 @@ class AssetWellnessController extends Controller
                 $totalVal = $cleanNum($row[9] ?? 0);
                 $tipeAset = $row[3] ?? '';
 
-                // If Raw Value is valid text (not formula), use it. otherwise calculate.
                 if ($rawStatus && !str_starts_with($rawStatus, '=')) {
                     $status = $rawStatus;
                 } else {
-                    // Calculate
                     if (stripos($tipeAset, 'COMMON') !== false) {
                         $status = '-';
                     } elseif ($faultVal > 0) {
-                        $status = 'Shutdown'; // Or Gangguan
+                        $status = 'Shutdown';
                     } elseif ($warnVal > 0 || ($totalVal > $safeVal)) {
                         $status = 'Derating';
                     } else {
@@ -665,7 +675,6 @@ class AssetWellnessController extends Controller
                     }
                 }
 
-                // Similar logic for Keterangan
                 if ($rawKet && !str_starts_with($rawKet, '=')) {
                     $ket = $rawKet;
                 } else {
@@ -674,35 +683,57 @@ class AssetWellnessController extends Controller
                     elseif ($status == 'Normal') $ket = 'Operasi Normal';
                 }
 
+                // Mapping UL
+                $unitPembangkit = strtoupper($row[5] ?? '');
+                $sentralRaw = strtoupper($row[2] ?? '');
+                $ul = null;
+
+                $ulMapping = [
+                    'UL NUNUKAN' => ['SEI BILAL', 'SEBATIK', 'MALINAU', 'TIDUNG PALE', 'TULIN ONSOI', 'KUALA LAPANG'],
+                    'UL TARAKAN' => ['GUNUNG BELAH', 'SEI BUAYA'],
+                    'UL TANJUNG SELOR' => ['BUNYU', 'SAMBALIUNG', 'TALISAYAN'],
+                    'UL BALIKPAPAN' => ['BATAKAN', 'GUNUNG MALANG', 'TANJUNG ARU', 'TJ ARU'],
+                ];
+
+                foreach ($ulMapping as $ulName => $keywords) {
+                    foreach ($keywords as $keyword) {
+                        if (str_contains($unitPembangkit, $keyword) || str_contains($sentralRaw, $keyword)) {
+                            $ul = $ulName;
+                            break 2;
+                        }
+                    }
+                }
+
+                // Data to update
+                $updateData = [
+                    'sentral' => $sentral ?: ($row[2] ?? null),
+                    'tipe_aset' => $row[3] ?? '-',
+                    'unit_pembangkit_common' => $row[5] ?? '-',
+                    'ul' => $ul,
+                    'daya_terpasang' => $cleanNum($row[6] ?? 0),
+                    'daya_mampu_netto' => $cleanNum($row[7] ?? 0),
+                    'daya_mampu_pasok' => $cleanNum($row[8] ?? 0),
+                    'total_equipment' => $cleanNum($row[9] ?? 0),
+                    'safe' => $cleanNum($row[10] ?? 0),
+                    'warning' => $cleanNum($row[11] ?? 0),
+                    'fault' => $cleanNum($row[12] ?? 0),
+                    'status_operasi' => $status,
+                    'keterangan' => $ket,
+                    'kode_mesin_silm' => $kodeMesin, 
+                ];
+
+                // Optional: Inisial Mesin if column detected
+                if ($inisialColIndex !== null && !empty($row[$inisialColIndex])) {
+                    $updateData['inisial_mesin'] = trim($row[$inisialColIndex]);
+                }
+
                 AssetWellness::updateOrCreate(
                     [
                         'kode_mesin' => $kodeMesin,
                         'tahun' => $tahun,
                         'bulan' => $bulan,
                     ],
-                    [
-                        'sentral' => $sentral ?: ($row[2] ?? null),
-                        'tipe_aset' => $row[3] ?? '-',
-                        'unit_pembangkit_common' => $row[5] ?? '-',
-                        
-                        // Daya Columns
-                        'daya_terpasang' => $cleanNum($row[6] ?? 0),
-                        'daya_mampu_netto' => $cleanNum($row[7] ?? 0),
-                        'daya_mampu_pasok' => $cleanNum($row[8] ?? 0),
-                        
-                        // Equipment Stats
-                        'total_equipment' => $cleanNum($row[9] ?? 0),
-                        'safe' => $cleanNum($row[10] ?? 0),
-                        'warning' => $cleanNum($row[11] ?? 0),
-                        'fault' => $cleanNum($row[12] ?? 0),
-                        
-                        'status_operasi' => $status,
-                        'keterangan' => $ket,
-                        
-                        // Auxiliary
-                        'kode_mesin_silm' => $kodeMesin, 
-                        // 'inisial_mesin' => '-', // REMOVED to prevent overwriting manual edits
-                    ]
+                    $updateData
                 );
                 $count++;
             }
